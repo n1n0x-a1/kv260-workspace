@@ -1,0 +1,16 @@
+# kustomization.yaml
+bases:
+- github.com/kubernetes/ingress-nginx/deploy/static/provider/baremetal?ref=v1.5.1
+resources:
+- configs/nginx-conf.yaml
+patchesJson6902:
+- target:
+    group: ''
+    version: v1
+    kind: Service
+    name: ingress-nginx-controller
+  path: service.yaml
+- target:
+    kind: Deployment
+    name: ingress-nginx-controller
+  path: deployment.yaml
