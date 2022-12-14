@@ -2,7 +2,7 @@
 bases:
 - github.com/kubernetes/ingress-nginx/deploy/static/provider/baremetal?ref=v1.5.1
 resources:
-- configs/nginx-conf.yaml
+- config/nginx-conf.yaml
 patchesJson6902:
 - target:
     group: ''
