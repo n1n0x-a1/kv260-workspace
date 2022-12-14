@@ -18,7 +18,7 @@ spec:
           image: chriskewis/kv260-xmutil
           imagePullPolicy: IfNotPresent
           resources:
-          command: ["python3", "/home/xmutil/xmutil-server.py"] #["/bin/bash", "-ce", "tail -f /dev/null"]
+          command: ["python3", "/home/xmutil-server.py"] #["/bin/bash", "-ce", "tail -f /dev/null"]
           ports:
             - containerPort: 80
           volumeMounts:
@@ -39,7 +39,7 @@ spec:
           type: Directory
       - name: xmutil
         hostPath:
-          path: /home/petalinux/xmutil
+          path: /home/petalinux
           type: Directory
       nodeSelector:
         id: worker
