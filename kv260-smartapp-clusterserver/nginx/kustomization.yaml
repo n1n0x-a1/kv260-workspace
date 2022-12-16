@@ -1,6 +1,6 @@
 # kustomization.yaml
 bases:
-- github.com/kubernetes/ingress-nginx/deploy/static/provider/baremetal?ref=v1.5.1
+- github.com/kubernetes/ingress-nginx/deploy/static/provider/baremetal?ref=controller-v1.5.1
 resources:
 - config/nginx-conf.yaml
 patchesJson6902:
