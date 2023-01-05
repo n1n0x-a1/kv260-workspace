@@ -1,4 +1,6 @@
-This project will explain the implementation of socket client server architecture. We will be using a k3s cluster environment with two servers setup, a normal computer server and a kv260 development board.
+This project will explain the implementation of socket client server architecture. 
+
+We will be using a k3s cluster environment with 2 servers setup, a computer server and a kv260 development board.
 
 ## Chapter 1: Conceptual Overview
 

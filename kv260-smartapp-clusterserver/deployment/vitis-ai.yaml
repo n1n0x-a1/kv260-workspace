@@ -1,5 +1,4 @@
 ---
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -15,16 +14,11 @@ spec:
     spec:
       containers:
         - name: backend
-          image: xilinx/vitis-ai:2.5
+          image: pm3h/x-vitis-ai:2.5.4
           imagePullPolicy: Always
-          #command: ["/bin/bash", "-ce", "tail -f /dev/null"]
-          command: ["python3","/home/workspace/vitis-server.py"]
+          command: ["python3","/home/server/vitis-server.py"]
           ports:
             - containerPort: 82
-          #lifecycle:
-           # postStart:
-           #   exec:
-           #     command: ["python3","/home/socket/vitis-server.py"]
           volumeMounts:
           - mountPath: /dev/shm
             name: shm
@@ -36,8 +30,8 @@ spec:
             name: vitis
           - mountPath: /home/workspace
             name: work
-        #  - mountPath: /home/workspace
-        #    name: socket
+          - mountPath: /home/server/vitis-server.py
+            name: pyserver
       volumes:
       - name: shm
         hostPath:
@@ -53,16 +47,16 @@ spec:
           type: Directory
       - name: vitis
         hostPath:
-          path: <PATH-TO-VITIS-AI>
+          path: /home/gary/path2vitisai
           type: Directory
       - name: work
-        hostPath: 
-          path: <PATH-TO-VITIS-AI>
+        hostPath:
+          path: /home/gary/path2vitisai
           type: Directory
-     # - name: socket
-     #   hostPath:
-     #     path: /home/chris/api
-     #     type: Directory
+      - name: pyserver
+        hostPath:
+          path: /home/gary/kv260-smartapp-auto/kv260-smartapp-clusterserver/server/vitis-server.py
+          type: File
       nodeSelector:
         id: master
 ---

@@ -9,21 +9,6 @@ import (
 
 var version string = "v0.1.1"
 
-// model example argument provide by user:
-// quantize
-// --model_name -> "model_best"
-// --data_dir -> "/home/workspace/ALLFORDEMO/imagenet"
-// --model_dir -> "/home/workspace/ALLFORDEMO"
-
-// compile
-// -x -> "/home/workspace/quantize_result/ResNet_int.xmodel"
-// -a -> "/home/workspace/arch.json"
-// -o -> "/home/workspace/quantize_result/"
-// -n -> "my_model"
-
-// deploy
-// --model -> "my_model" (provide final model name that will be the name of xmodel)
-
 type Subcommand struct {
 	fs      *flag.FlagSet
 	version string
@@ -60,7 +45,7 @@ type Runner interface {
 	LoadBitstream(string)
 	QuantizedModel(string, string, string) error
 	CompileModel(string, string, string, string) error
-	DeployModel(string) error
+	DeployModel(string, string) error
 	ConfigureApp()
 	RunApp(string)
 	Name() string
@@ -123,13 +108,6 @@ func Root(args []string) error {
 
 	set_parse := false
 
-	// command: "", "bitstream", "model", "app"
-	// model has subcommand: "quantize", "compile", "deploy"
-	// General guidelines:
-	// 1. check minimum args len > 0
-	// 2. check if all argument are parsed and matched
-	// 3. check flag associated with functionality is equal to 1 (only one function will be executed at a time)
-	// 4. call the associated function with updated flag argument
 	for _, cmd := range cmds {
 		firstArg := os.Args[1]
 		if firstArg == cmd.Name() {
@@ -220,8 +198,9 @@ func Root(args []string) error {
 						if s_flagset.Init(os.Args[3:]) != nil {
 							return errors.New("Argument not identified")
 						}
-						deploy_model := helper_FlagStringValue(s_flagset.Flag(), "model")
-						cmd.DeployModel(deploy_model)
+						deploy_dir := helper_FlagStringValue(s_flagset.Flag(), "dirname")
+						deploy_model := helper_FlagStringValue(s_flagset.Flag(), "modelname")
+						cmd.DeployModel(deploy_dir, deploy_model)
 					}
 					break
 				}

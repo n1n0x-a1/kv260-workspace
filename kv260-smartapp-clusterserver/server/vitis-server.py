@@ -22,11 +22,14 @@ while True: #链接循环
         print('接收的是：%s',cmd)
         str = cmd.decode('utf-8').split()
         if str[0] == 'scp':
-            print('scp file')
+            print('--scp files...')
             str[-1] = 'petalinux@10.20.0.33:'+str[-1].strip()
-            str = ['sshpass','-p','ninox123']+str
             print(str)
-            with Popen(str, stdout=PIPE, stderr=STDOUT, bufsize=1, text=True) as p:
+            cmd_scp = "sshpass -p ninox123 "
+            for i in str:
+                cmd_scp = cmd_scp + i + ' '
+            print(cmd_scp)
+            with Popen(cmd_scp, shell=True, stdout=PIPE, stderr=STDOUT, bufsize=1) as p:
                 for line in p.stdout:
                     print(line)
                     coon.send(line.encode('utf-8'))
@@ -34,7 +37,7 @@ while True: #链接循环
         else:
             cmd = f""". /opt/vitis_ai/conda/etc/profile.d/conda.sh
                    conda activate vitis-ai-pytorch
-                   {cmd.decode('utf-8')}""" 
+                   {cmd.decode('utf-8')}"""
             with Popen(cmd, stdout=PIPE,shell=True ,stderr=STDOUT, bufsize=1, universal_newlines=True) as p:
                 for line in p.stdout:
                     print(line)
