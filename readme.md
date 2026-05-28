@@ -1,57 +1,145 @@
-# Use Yocto to build xilinx-layer
+# KV260 Yocto/PetaLinux Build Environment
 
-## Tools usage
-* git
-* bitbake
+This repository contains the configuration and documentation for building a custom, minimal embedded Linux distribution for a Xilinx Kria KV260 Vision AI Starter Kit using the **Yocto Project (Poky)** and Xilinx’s layers (matching the PetaLinux 2024.2 ecosystem).
 
-##  Device Check
-* board : kv260
-* xilinx-layers : rel-v2022.1
-* Poky : honister
+It also includes notes on a pre-configured OS environment that runs Kubernetes (Talos k8s) or Proxmox VE at the edge.
 
-## Steps
+---
 
-1. Get meta-layer from github
-2. Set config file for building
-3. Build
-4. Package to SD-Card
+## 🛠️ Tools Usage
+* **git**: For fetching meta-layers and repository management.
+* **bitbake**: The core build engine for the Yocto Project used to compile the Linux image.
+* **balenaEtcher**: (Recommended) For flashing the compiled `.wic.gz` image directly to your SD Card.
 
-## Get meta-layer from github
-In the beginning, we build yocto by poky. Now, we want to append new layers for our linux. We use xilinx layers from xilinx website,and those layers are used in petalinux.
-(Total layers in petalinux)
-https://support.xilinx.com/s/article/000034113?language=en_US
-### folder structure
-*  poky
- ->build (after source ~/poky/oe-init-build-env)
-* source
- ->require layers
- ### require layer:
+## 📋 Device & Version Check
+* **Target Board:** Kria KV260 Vision AI Starter Kit
+* **Host OS:** Ubuntu 24.04 LTS
+* **Xilinx Layers:** `rel-v2024.2`
+* **Poky (Yocto Version):** `scarthgap` (Yocto 5.0)
+* **ROS 2:** `jazzy`
 
-| layer | website | branch |
-| -------- | -------- | -------- |
-| poky     | https://github.com/Xilinx/poky/tree/rel-v2022.1     | rel-v2022.1     |
-|  meta-openembedded      | https://github.com/Xilinx/meta-openembedded/tree/rel-v2022.1     | rel-v2022.1     || -------- | -------- | -------- |
-| openamp     | https://github.com/Xilinx/meta-openamp/tree/rel-v2022.1    | rel-v2022.1     || -------- | -------- | -------- |
-| clang     | https://github.com/Xilinx/meta-clang/tree/rel-v2022.1     | rel-v2022.1     || -------- | -------- | -------- |
-| browser     | https://github.com/Xilinx/meta-browser/tree/rel-v2022.1    | rel-v2022.1     || -------- | -------- | -------- |
-| petalinux     | https://github.com/Xilinx/meta-petalinux/tree/rel-v2022.1     | rel-v2022.1     || -------- | -------- | -------- |
-| xilinx     | https://github.com/Xilinx/meta-xilinx/tree/rel-v2022.1     | rel-v2022.1     || -------- | -------- | -------- |
-| xilinx-tool     | https://github.com/Xilinx/meta-xilinx-tools/tree/rel-v2022.1    | rel-v2022.1     |
-|qt5|https://github.com/meta-qt5/meta-qt5/tree/honister|honister
-|virtualization|https://github.com/Xilinx/meta-virtualization/tree/rel-v2022.1|rel-v2022.1|
-|jupyter|https://github.com/Xilinx/meta-jupyter/tree/rel-v2022.1|rel-v2022.1|
-|ros|https://github.com/Xilinx/meta-ros|rel-v2022.1|
-## Set config file for building
-If we want to append new layers, we need to modify bblayer.conf.
-Modify your ~/poky/build/conf/bblayer.conf
+---
+
+## 🛠️ Ubuntu 24.04 AppArmor Fix (Required)
+
+Ubuntu 24.04 introduces strict AppArmor profiles that block unprivileged user namespaces by default. BitBake relies on these namespaces for network isolation during build tasks. Before running any builds, you **must** temporarily disable this restriction on your host machine:
+
+```bash
+sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 ```
-# POKY_BBLAYERS_CONF_VERSION is increased each time build/conf/bblayers.conf
-# changes incompatibly   
+*(Note: This setting resets upon reboot. You only need to run it once per boot session before building.)*
+
+---
+
+## 📁 Folder Structure Overview
+
+```text
+{path_to_workspace}/kv260-yocto/
+├── poky/                  # The core Yocto Project build system repository
+│   └── build/             # Generated after initialization (contains outputs & local configs)
+│       ├── conf/          # Contains local.conf and bblayers.conf
+│       └── tmp/deploy/    # Final output destination for compiled images
+└── source/                # Directory containing all supplementary meta-layers
+    ├── meta-openembedded  # Additional OpenEmbedded recipes
+    ├── meta-xilinx        # Xilinx-specific hardware layers
+    ├── meta-ros           # ROS 2 robotics recipes
+    └── ...
+```
+
+---
+
+## 🚀 Setup & Build Guide
+
+### Step 1: Set Up the Directory Structure
+
+You need to organize your workspace precisely so that the configuration files point to the correct relative paths.
+
+1. Create a base directory for your project and a `source` directory inside it:
+```bash
+mkdir -p {path_to_workspace}/kv260-yocto/source
+cd {path_to_workspace}/kv260-yocto/source
+```
+
+### Step 2: Clone the Required Layers
+
+The repository relies on specific versions of layers matched to the `rel-v2024.2` release (Yocto version **Scarthgap**). Run the following commands to clone all necessary layers into your `{path_to_workspace}/kv260-yocto/source` folder:
+
+```bash
+# Clone Poky (the Yocto reference distribution) one level up
+cd {path_to_workspace}/kv260-yocto
+git clone -b rel-v2024.2 https://github.com/Xilinx/poky.git
+
+# Clone all required meta-layers into the source directory
+cd {path_to_workspace}/kv260-yocto/source
+git clone -b rel-v2024.2 https://github.com/Xilinx/meta-openembedded.git
+git clone -b rel-v2024.2 https://github.com/Xilinx/meta-openamp.git
+git clone -b scarthgap https://github.com/kraj/meta-clang.git
+git clone -b scarthgap https://github.com/OSSystems/meta-browser.git
+git clone -b scarthgap/rust https://git.yoctoproject.org/meta-lts-mixins.git
+git clone -b scarthgap https://git.yoctoproject.org/meta-arm.git
+git clone -b rel-v2024.2 https://github.com/Xilinx/meta-petalinux.git
+git clone -b rel-v2024.2 https://github.com/Xilinx/meta-xilinx.git
+git clone -b rel-v2024.2 https://github.com/Xilinx/meta-xilinx-tools.git
+git clone -b scarthgap https://github.com/meta-qt5/meta-qt5.git
+git clone -b 6.7 git://code.qt.io/yocto/meta-qt6.git
+git clone -b rel-v2024.2 https://github.com/Xilinx/meta-virtualization.git
+git clone -b rel-v2024.2 https://github.com/Xilinx/meta-jupyter.git
+git clone -b rel-v2024.2 https://github.com/Xilinx/meta-ros.git
+```
+
+#### Complete Layer Reference Table
+
+*(Note: The canonical source for verifying layer dependencies and branches for Yocto 5.0 is the [OpenEmbedded Scarthgap Layer Index](https://layers.openembedded.org/layerindex/branch/scarthgap/layers/).)*
+
+| Layer Name | Repository Website | Target Branch |
+| :--- | :--- | :--- |
+| **poky** | https://github.com/Xilinx/poky | `rel-v2024.2` |
+| **meta-openembedded** | https://github.com/Xilinx/meta-openembedded | `rel-v2024.2` |
+| **meta-openamp** | https://github.com/Xilinx/meta-openamp | `rel-v2024.2` |
+| **meta-clang** | https://github.com/kraj/meta-clang | `scarthgap` |
+| **meta-browser** | https://github.com/OSSystems/meta-browser | `scarthgap` |
+| **meta-lts-mixins** | https://git.yoctoproject.org/meta-lts-mixins | `scarthgap/rust` |
+| **meta-arm** | https://git.yoctoproject.org/meta-arm | `scarthgap` |
+| **meta-petalinux** | https://github.com/Xilinx/meta-petalinux | `rel-v2024.2` |
+| **meta-xilinx** | https://github.com/Xilinx/meta-xilinx | `rel-v2024.2` |
+| **meta-xilinx-tools** | https://github.com/Xilinx/meta-xilinx-tools | `rel-v2024.2` |
+| **meta-qt5** | https://github.com/meta-qt5/meta-qt5 | `scarthgap` |
+| **meta-qt6** | git://code.qt.io/yocto/meta-qt6.git | `6.7` |
+| **meta-virtualization** | https://github.com/Xilinx/meta-virtualization | `rel-v2024.2` |
+| **meta-jupyter** | https://github.com/Xilinx/meta-jupyter | `rel-v2024.2` |
+| **meta-ros** | https://github.com/Xilinx/meta-ros | `rel-v2024.2` |
+
+---
+
+## ⚙️ Build Configuration
+
+### Step 3: Initialize the Build Environment
+
+Run the initialization script from the `poky` directory. This script creates a `build` directory and populates it with template configuration files, while setting up your terminal environmental variables.
+
+```bash
+cd {path_to_workspace}/kv260-yocto/poky
+source oe-init-build-env
+```
+
+*(Note: This automatically shifts your terminal working directory into `{path_to_workspace}/kv260-yocto/poky/build`)*
+
+### Step 4: Configure `bblayers.conf`
+
+Open your layer configuration file:
+
+```bash
+nano conf/bblayers.conf
+```
+
+Replace its contents with the block provided in the repository to explicitly link all the cloned meta-layers. Make sure the `SOURCEPATH` matches your local profile (e.g., using `${TOPDIR}/../../source` is a safe relative way to do this):
+
+```bitbake
 POKY_BBLAYERS_CONF_VERSION = "2"
 
 BBPATH = "${TOPDIR}"
 BBFILES ?= ""
-SOURCEPATH = "/home/chris/kv260-yocto/source"
+SOURCEPATH = "${TOPDIR}/../../source"
 
 BBLAYERS ?= " \
   ${SOURCEPATH}/../poky/meta \
@@ -71,81 +159,103 @@ BBLAYERS ?= " \
   ${SOURCEPATH}/meta-xilinx/meta-microblaze \
   ${SOURCEPATH}/meta-xilinx/meta-xilinx-core \
   ${SOURCEPATH}/meta-xilinx/meta-xilinx-bsp \
-  ${SOURCEPATH}/meta-xilinx/meta-xilinx-pynq \
   ${SOURCEPATH}/meta-xilinx/meta-xilinx-contrib \
   ${SOURCEPATH}/meta-xilinx/meta-xilinx-standalone \
   ${SOURCEPATH}/meta-xilinx-tools \
   ${SOURCEPATH}/meta-petalinux \
   ${SOURCEPATH}/meta-qt5 \
+  ${SOURCEPATH}/meta-qt6 \
+  ${SOURCEPATH}/meta-lts-mixins \
+  ${SOURCEPATH}/meta-arm/meta-arm \
+  ${SOURCEPATH}/meta-arm/meta-arm-toolchain \
   ${SOURCEPATH}/meta-openamp \
   ${SOURCEPATH}/meta-ros/meta-ros2 \
-  ${SOURCEPATH}/meta-ros/meta-ros2-humble \
+  ${SOURCEPATH}/meta-ros/meta-ros2-jazzy \
   ${SOURCEPATH}/meta-ros/meta-ros-common \
   ${SOURCEPATH}/meta-virtualization \
   ${SOURCEPATH}/meta-jupyter \
   "
 ```
-add those command in your ~/poky/build/conf/local.conf
+
+### Step 5: Configure `local.conf`
+
+Open your local configuration variables file:
+
+```bash
+nano conf/local.conf
 ```
+
+Append the following targets to the bottom of the file:
+
+```bitbake
 DISTRO ?= "petalinux"
 MACHINE ??= "zynqmp-generic"
 IMAGE_FSTYPES = "wic.gz"
 INHERIT += "rm_work"
+
+# Accept Xilinx restricted licenses
+LICENSE_FLAGS_ACCEPTED += "xilinx"
+
+# Define the PetaLinux version for the meta-petalinux layer
+PETALINUX_VERSION = "2024.2"
+
+# Enable virtualization features for Docker/k8s support
+DISTRO_FEATURES:append = " virtualization"
 ```
 
-## Build 
-use bitbake to build your linux.
-If you see bitbake command not found, go to ~/poky and source oe-init-build-env.
+> 💡 **Tip:** `INHERIT += "rm_work"` clears out temporary build directories after a package is successfully built. This is highly recommended to save tens of gigabytes of storage space.
+
+---
+
+## 🔨 Execution & Deployment
+
+### Step 6: Compile the Image
+
+Kick off the BitBake compilation process. This step can take anywhere from 1 to several hours depending on your host computer's processor and internet speed.
+
+```bash
+bitbake petalinux-image-minimal
 ```
-$ cd ~/poky/build
-$ bitbake petalinux-image-minimal
-```
-## Package to SD-Card
-### Two options.
-we have two choices to finish our work.
-First, We use Gparted to split sd-card to two partitions(FAT32 and Ext4).The other one is use balenaEtcher to load our sd-card. Then replace files in this sd-card-boot.
 
-https://github.com/JohnsonOUO/yocto-kv260
-**First One Option**
-1. use Gparted to parition sdcard to two sections.
-Partition is like |FAT32|------Ext4-------|
+### Step 7: Flash the SD Card
 
-FAT32 : boot src, system.dtb, Image, ramdisk.cpio.gz.u-boot.
-* boot.src and system.dtb is from github
-* Image and ramdisk.cpio.gz.u-boot, we need to
-```
-$ cp ~/poky/build/tmp/deploy/image/zynqmp-generic/Image SD-Card-partition-1/Image
-$ cp ~/poky/build/tmp/deploy/image/zynqmp-generic/petalinux-...-generic.cpio.gz.u-boot SD-Card-partition-1/ramdisk.cpio.gz.u-boot
-```
-Ext4 :
-unpackage tar.gz to your sd-card-partition-2
-```
-$ tar xvf ~/poky/build/tmp/deploy/image/zynqmp-generic/petalinux-...-generic.tar.gz SD-Card-partition-2
-```
-**Second One Option**
-Use balenaEtcher load wic.gz to sdcard
-(poky/build/tmp/deploy/image/YOUR_MACHINE/***.wic.gz)
-Then replace boot src and system.dtb from your sd-card boot folder.
+We have two choices to finish our work. **Option 2 (using BalenaEtcher)** is highly recommended as it is much faster and cleaner.
 
+**Option 1: Manual Partitioning (GParted)**
+1. Use GParted to partition your SD card into two sections: `|FAT32|------Ext4-------|`
+2. **FAT32 (Boot):** Copy `boot.src` and `system.dtb` (from this repository), along with the `Image` and `ramdisk.cpio.gz.u-boot` files:
+   ```bash
+   cp {path_to_workspace}/kv260-yocto/poky/build/tmp/deploy/images/zynqmp-generic/Image /media/$USER/BOOT/
+   cp {path_to_workspace}/kv260-yocto/poky/build/tmp/deploy/images/zynqmp-generic/petalinux-image-minimal-zynqmp-generic.cpio.gz.u-boot /media/$USER/BOOT/ramdisk.cpio.gz.u-boot
+   ```
+3. **Ext4 (RootFS):** Extract the `tar.gz` root filesystem to the Ext4 partition:
+   ```bash
+   sudo tar xvf {path_to_workspace}/kv260-yocto/poky/build/tmp/deploy/images/zynqmp-generic/petalinux-image-minimal-zynqmp-generic.tar.gz -C /media/$USER/ROOTFS/
+   ```
 
-## Configuration
-帳號：root 
-密碼：nino123x
+**Option 2: BalenaEtcher (Recommended)**
+1. Locate your built flashable image:
+`{path_to_workspace}/kv260-yocto/poky/build/tmp/deploy/images/zynqmp-generic/petalinux-image-minimal-zynqmp-generic.wic.gz`
+2. Insert your micro-SD card into your host machine and use **balenaEtcher** to flash that `.wic.gz` file directly onto the card.
+3. Once flashed, open the small **BOOT** partition of the SD card on your computer and copy/replace the `boot.scr` and `system.dtb` files located in the root of this clone repository onto that partition.
 
-網路設定：
-/etc/network/interfaces 更改ip 以及gateway 等等
+---
 
-無線網路：
-/etc/wpa_supplicant/wpa_supplicant下更改帳號密碼即可
-Proxmox網頁：
-https://ip:8006
+## 💻 Post-Boot Configuration & Login
 
-Talos k8s部署：
-（如果node 關機打不開 
-cd ~/Edge-Cloud/01-…/
-nano var.ft 先把num_master跟num_worker設為0 在該目錄下執行terraform apply（yes)
-在將剛剛num設回1（master)2(worker) 再執行terraform apply （yes)跑好後 
-cd ~
-./bootstrap.sh （該檔案的最後兩行 執行一次即可）
-(選擇overwrite) 即可使用kubectl 去做操作
+Safely eject the SD card, insert it into your KV260 board, and power it up. You can interface with it using a serial console connection (like PuTTY or Minicom) or via an attached display/keyboard.
 
+* **Username:** `root`
+* **Password:** `nino123x`
+
+### Post-Installation Adjustments
+
+The documentation notes specific files to edit directly on the live target file system if you need to alter network states:
+
+* **Ethernet/Static IP configurations:** Edit `/etc/network/interfaces`
+* **Wi-Fi configurations:** Edit credentials inside `/etc/wpa_supplicant/wpa_supplicant.conf`
+
+Additionally, if your built cluster includes Edge-Cloud controls, you can use the built-in hooks to manage your infrastructure:
+
+* Access the Proxmox UI via: `https://<your_board_ip>:8006`
+* To reset or resolve unresponsive Talos Kubernetes nodes, navigate to `~/Edge-Cloud/01-.../` on your system, adjust instances in `var.ft`, run `terraform apply`, and run `./bootstrap.sh`.
