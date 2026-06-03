@@ -1,8 +1,8 @@
 # KV260 Yocto/PetaLinux Build Environment
 
-This repository contains the configuration and documentation for building a custom, minimal embedded Linux distribution for a Xilinx Kria KV260 Vision AI Starter Kit using the **Yocto Project (Poky)** and Xilinx’s layers (matching the PetaLinux 2024.2 ecosystem).
+It also includes configuration and build recipes for packaging KubeEdge (edgecore) and containerd into the Linux system image for edge orchestration.
 
-It also includes notes on a pre-configured OS environment that runs Kubernetes (Talos k8s) or Proxmox VE at the edge.
+For the overarching, multi-phase orchestration migration plan, refer to the master [note.md](file:///home/syvesdh/NinoxWorkspace/kv260-workspace/note.md).
 
 ---
 
@@ -85,6 +85,9 @@ git clone -b 6.7 git://code.qt.io/yocto/meta-qt6.git
 git clone -b rel-v2024.2 https://github.com/Xilinx/meta-virtualization.git
 git clone -b rel-v2024.2 https://github.com/Xilinx/meta-jupyter.git
 git clone -b rel-v2024.2 https://github.com/Xilinx/meta-ros.git
+
+# Inject the custom meta-kubeedge layer containing edgecore and keadm recipes
+# (Ensure source/meta-kubeedge is copied/created in your source directory)
 ```
 
 #### Complete Layer Reference Table
@@ -108,6 +111,7 @@ git clone -b rel-v2024.2 https://github.com/Xilinx/meta-ros.git
 | **meta-virtualization** | https://github.com/Xilinx/meta-virtualization | `rel-v2024.2` |
 | **meta-jupyter** | https://github.com/Xilinx/meta-jupyter | `rel-v2024.2` |
 | **meta-ros** | https://github.com/Xilinx/meta-ros | `rel-v2024.2` |
+| **meta-kubeedge** | (Custom Workspace Layer) | `1.15.0` |
 
 ---
 
@@ -174,6 +178,7 @@ BBLAYERS ?= " \
   ${SOURCEPATH}/meta-ros/meta-ros-common \
   ${SOURCEPATH}/meta-virtualization \
   ${SOURCEPATH}/meta-jupyter \
+  ${SOURCEPATH}/meta-kubeedge \
   "
 ```
 
@@ -199,8 +204,9 @@ LICENSE_FLAGS_ACCEPTED += "xilinx"
 # Define the PetaLinux version for the meta-petalinux layer
 PETALINUX_VERSION = "2024.2"
 
-# Enable virtualization features for Docker/k8s support
+# Enable virtualization and KubeEdge features for container orchestration
 DISTRO_FEATURES:append = " virtualization"
+IMAGE_INSTALL:append = " kubeedge containerd"
 ```
 
 > 💡 **Tip:** `INHERIT += "rm_work"` clears out temporary build directories after a package is successfully built. This is highly recommended to save tens of gigabytes of storage space.
@@ -255,7 +261,9 @@ The documentation notes specific files to edit directly on the live target file 
 * **Ethernet/Static IP configurations:** Edit `/etc/network/interfaces`
 * **Wi-Fi configurations:** Edit credentials inside `/etc/wpa_supplicant/wpa_supplicant.conf`
 
-Additionally, if your built cluster includes Edge-Cloud controls, you can use the built-in hooks to manage your infrastructure:
+Additionally, connect your edge node to the KubeEdge CloudCore master:
 
-* Access the Proxmox UI via: `https://<your_board_ip>:8006`
-* To reset or resolve unresponsive Talos Kubernetes nodes, navigate to `~/Edge-Cloud/01-.../` on your system, adjust instances in `var.ft`, run `terraform apply`, and run `./bootstrap.sh`.
+* On the KV260 board, run the join command:
+  ```bash
+  keadm join --cloudcore-ipport=<MASTER-IP>:10000 --token=<TOKEN> --kubeedge-version=1.15.0
+  ```

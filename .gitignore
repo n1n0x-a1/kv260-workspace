@@ -1,0 +1,6 @@
+# Ignore all Yocto/Poky build system files
+kv260-yocto/poky/
+# Ignore all cloned third-party layers
+kv260-yocto/source/*/
+# But DO NOT ignore our custom kubeedge layer
+!kv260-yocto/source/meta-kubeedge/
