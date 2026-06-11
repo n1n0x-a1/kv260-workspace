@@ -464,7 +464,11 @@ flowchart TD
       Record the obtained IP address; this is your `<kv260-ip-address>` for Phase 4.
     * Start the SSH daemon manually:
       ```bash
+      /etc/init.d/sshd status
       /etc/init.d/sshd start
+
+      # Check if the port is listening      
+      netstat -tuln | grep 22
       ```
     * Exit the `screen` session to return to your host command line by pressing **`Ctrl+A`** followed by **`K`**, and then confirming with **`Y`**.
 
@@ -569,7 +573,7 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
 5. **Deploy the Ingress Controller (on Master VM/Laptop)**:
    Set up edge ingress routing on the master:
    ```bash
-   kubectl apply -k kv260-smartapp-clusterserver/nginx
+   kubectl apply -k smartapp-modified/kv260-smartapp-clusterserver/nginx
    ```
 
 ##### 5.2: Staging Server Scripts and Host Directory Setup
@@ -579,7 +583,7 @@ Before deploying the pods, we must copy the backend socket server scripts to the
   Copy dependencies and compilation helpers to the Master VM:
   ```bash
   # Copy dependencies onto the Master VM
-  scp -r kv260-smartapp-clusterserver/need <vm-node>:~/
+  scp -r smartapp-modified/kv260-smartapp-clusterserver/need <vm-node>:~/
 
   # On the Master VM:
   # Copy arch.json, custom configs, and datasets into Vitis-AI folder
@@ -598,30 +602,30 @@ Before deploying the pods, we must copy the backend socket server scripts to the
   Copy the socket server scripts directly to the KV260 filesystem:
   ```bash
   # Copy the xmutil-server.py script
-  scp server/xmutil-server.py <kv260-node>:/home/petalinux/
+  scp smartapp-modified/kv260-smartapp-clusterserver/server/xmutil-server.py <kv260-node>:/home/petalinux/
 
   # Copy the app-server.py script
-  scp server/app-server.py <kv260-node>:/opt/xilinx/kv260-vvas-sms/app/
+  scp smartapp-modified/kv260-smartapp-clusterserver/server/app-server.py <kv260-node>:/opt/xilinx/kv260-vvas-sms/app/
   ```
 
 ##### 5.3: Deploying Orchestrated Workloads (on Master VM/Laptop)
 Deploy the compiler, hardware overlay manager, and camera application pods to the cluster:
 ```bash
 # Deploy Vitis AI compiler pod (on master)
-kubectl apply -f kv260-smartapp-clusterserver/deployment/vitis-ai.yaml
+kubectl apply -f smartapp-modified/kv260-smartapp-clusterserver/deployment/vitis-ai.yaml
 
 # Deploy xmutil hardware manager pod (on KV260)
-kubectl apply -f kv260-smartapp-clusterserver/deployment/xmutil.yaml
+kubectl apply -f smartapp-modified/kv260-smartapp-clusterserver/deployment/xmutil.yaml
 
 # Deploy camera application pod (on KV260)
-kubectl apply -f kv260-smartapp-clusterserver/deployment/app-pod.yaml
+kubectl apply -f smartapp-modified/kv260-smartapp-clusterserver/deployment/app-pod.yaml
 ```
 *(Ensure these pods run as `privileged: true` with `/sys`, `/config`, and `/dev` mounted to allow direct hardware interaction with the DPU and overlays).*
 
 ##### 5.4: Command Line Interface (`ninoctl`) and Remote Execution
 Build and run the `ninoctl` client inside its container to trigger remote quantization, compilation, and deployment commands:
 ```bash
-cd kv260-smartapp-cli
+cd smartapp-modified/kv260-smartapp-cli
 docker build --target prod . -t ninoctl
 docker run -it ninoctl
 ```
