@@ -72,7 +72,7 @@
 
 Below is a detailed breakdown of the directories within the `smartapp-modified` workspace and their respective functions:
 
-*   **[`kv260-smartapp-cli`](file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-cli/) (Go Command Line Interface)**
+*   **[`kv260-smartapp-cli`](smartapp-modified/kv260-smartapp-cli/) (Go Command Line Interface)**
     *   **Purpose**: Contains the source code for the custom `ninoctl` command-line utility. 
     *   **Key Files**:
         *   `src/main.go`: Entry point for the CLI.
@@ -80,27 +80,27 @@ Below is a detailed breakdown of the directories within the `smartapp-modified` 
         *   `src/util/tcpclient.go`: Handles standard TCP socket calls from `ninoctl` to the socket servers.
         *   `src/util/bitstreamcli.go`, `modelcli.go`, `appcli.go`: Commands to load bitstreams, quantize/compile models, and trigger applications on the board.
     
-*   **[`kv260-smartapp-clusterserver`](file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-clusterserver/) (Cluster Service Logic & Manifests)**
+*   **[`kv260-smartapp-clusterserver`](smartapp-modified/kv260-smartapp-clusterserver/) (Cluster Service Logic & Manifests)**
     *   **Purpose**: Hosts the backend socket servers and the Kubernetes/KubeEdge orchestration manifests.
     *   **Key Subfolders**:
-        *   [`server/`](file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-clusterserver/server/): Python socket servers (`app-server.py` to trigger edge execution, `xmutil-server.py` to load bitstreams, and `vitis-server.py` to handle remote compilation).
-        *   [`deployment/`](file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-clusterserver/deployment/): K8s/KubeEdge manifest files (`xmutil.yaml` for hardware management, `app-pod.yaml` for Vitis-AI model execution, and `vitis-ai.yaml` for the compilation server).
-        *   [`need/`](file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-clusterserver/need/): Reference model definitions and quantization weights (`resnet18_quant.py`, `model_best.pth`, `arch.json`) for DPU compilation testing.
-        *   [`nginx/`](file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-clusterserver/nginx/): Ingress resources and manifests to configure edge ingress routing on the master.
+        *   [`server/`](smartapp-modified/kv260-smartapp-clusterserver/server/): Python socket servers (`app-server.py` to trigger edge execution, `xmutil-server.py` to load bitstreams, and `vitis-server.py` to handle remote compilation).
+        *   [`deployment/`](smartapp-modified/kv260-smartapp-clusterserver/deployment/): K8s/KubeEdge manifest files (`xmutil.yaml` for hardware management, `app-pod.yaml` for Vitis-AI model execution, and `vitis-ai.yaml` for the compilation server).
+        *   [`need/`](smartapp-modified/kv260-smartapp-clusterserver/need/): Reference model definitions and quantization weights (`resnet18_quant.py`, `model_best.pth`, `arch.json`) for DPU compilation testing.
+        *   [`nginx/`](smartapp-modified/kv260-smartapp-clusterserver/nginx/): Ingress resources and manifests to configure edge ingress routing on the master.
 
-*   **[`vitisImage`](file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/vitisImage/) (Docker Build Helpers)**
+*   **[`vitisImage`](smartapp-modified/vitisImage/) (Docker Build Helpers)**
     *   **Purpose**: Docker context files to build the host compilation environment container.
     *   **Key Files**: Contains a custom `ssh_config` that disables strict host key checking (`StrictHostKeyChecking no`), allowing automated SCP script file transfers from the master node to the KV260 edge node without prompting for trust confirmation.
 
-*   **[`kv260-smartapp-platform`](file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/) (Hardware & AI Overlay Submodules)**
+*   **[`kv260-smartapp-platform`](smartapp-modified/kv260-smartapp-platform/) (Hardware & AI Overlay Submodules)**
     *   **Purpose**: An umbrella directory managing Git submodules for Xilinx physical overlays, platforms, and compilers.
     *   **Registered Submodules**:
-        1.  **[`kria-vitis-platforms`](file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/kria-vitis-platforms/)**: Contains Vivado hardware platform scripts to generate the baseline extensible hardware platform (`kv260_ispMipiRx_vcu_DP`), managing peripherals like cameras and displays.
-        2.  **[`VVAS`](file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/) (Vitis Video Analytics SDK)**: Provides GStreamer acceleration plugins to wrap physical overlays into GStreamer media pipelines.
-        3.  **[`Vitis-AI`](file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/Vitis-AI/)**: The AMD/Xilinx deep learning runtime, compiler, and Model Zoo. Used to quantize and target PyTorch/TensorFlow networks to the target DPU overlay.
-        4.  **[`kria-apps-firmware`](file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/kria-apps-firmware/)**: The reference firmware overlays and bitstreams release directory for Kria starter kit applications.
+        1.  **[`kria-vitis-platforms`](smartapp-modified/kv260-smartapp-platform/kria-vitis-platforms/)**: Contains Vivado hardware platform scripts to generate the baseline extensible hardware platform (`kv260_ispMipiRx_vcu_DP`), managing peripherals like cameras and displays.
+        2.  **[`VVAS`](smartapp-modified/kv260-smartapp-platform/VVAS/) (Vitis Video Analytics SDK)**: Provides GStreamer acceleration plugins to wrap physical overlays into GStreamer media pipelines.
+        3.  **[`Vitis-AI`](smartapp-modified/kv260-smartapp-platform/Vitis-AI/)**: The AMD/Xilinx deep learning runtime, compiler, and Model Zoo. Used to quantize and target PyTorch/TensorFlow networks to the target DPU overlay.
+        4.  **[`kria-apps-firmware`](smartapp-modified/kv260-smartapp-platform/kria-apps-firmware/)**: The reference firmware overlays and bitstreams release directory for Kria starter kit applications.
     *   **Key Subfolders**:
-        *   [`change/`](file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/change/): Custom overlay settings, modifications to the baseline VVAS model select app, and PetaLinux image configurations.
+        *   [`change/`](smartapp-modified/kv260-smartapp-platform/change/): Custom overlay settings, modifications to the baseline VVAS model select app, and PetaLinux image configurations.
 
 ---
 
@@ -242,11 +242,11 @@ flowchart TD
     style Phase3 fill:#192c19,stroke:#3b5a3b,stroke-width:2px,color:#fff
     style Phase4 fill:#352a1b,stroke:#66553e,stroke-width:2px,color:#fff
 
-    click A href "file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/kria-vitis-platforms" "Open Platform Submodule"
-    click B href "file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS" "Open VVAS Submodule"
-    click C href "file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/Vitis-AI" "Open Vitis-AI Submodule"
-    click E href "file:///home/syvesdh/NinoxWorkspace/kv260-workspace/yocto-xilinx" "Open Yocto Build Directory"
-    click P href "file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-clusterserver/deployment" "Open Deployment Manifests"
+    click A href "smartapp-modified/kv260-smartapp-platform/kria-vitis-platforms" "Open Platform Submodule"
+    click B href "smartapp-modified/kv260-smartapp-platform/VVAS" "Open VVAS Submodule"
+    click C href "smartapp-modified/kv260-smartapp-platform/Vitis-AI" "Open Vitis-AI Submodule"
+    click E href "yocto-xilinx" "Open Yocto Build Directory"
+    click P href "smartapp-modified/kv260-smartapp-clusterserver/deployment" "Open Deployment Manifests"
 ```
 
 ### Detailed Implementation Phases
@@ -254,14 +254,13 @@ flowchart TD
 #### Phase 1: Hardware & AI Overlay Preparation (`smartapp-modified/kv260-smartapp-platform`)
 > [!NOTE]
 > Vitis/Vivado 2022.1 requires an Ubuntu 20.04 environment. If your host is Ubuntu 24.04, you must build the platform inside an Ubuntu 20.04 container mapping your host's Xilinx tools. 
-> For detailed instructions on downloading, preparing host directories, installing dependencies, and running the graphical installer container, refer to the [Vitis Installation Guide](file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/vitis_installation_guide.md).
+> For detailed instructions on downloading, preparing host directories, installing dependencies, and running the graphical installer container, refer to the [Vitis Installation Guide](smartapp-modified/vitis_installation_guide.md).
 
 > [!NOTE]
-> Throughout this guide, `<repo_path>` refers to `/home/syvesdh/NinoxWorkspace`.
 
 1. **Initialize and Update Submodules**:
    ```bash
-   cd <repo_path>/kv260-workspace/smartapp-modified/kv260-smartapp-platform
+   cd smartapp-modified/kv260-smartapp-platform
    git submodule update --init --recursive --progress -j 8
    ```
 
@@ -272,8 +271,8 @@ flowchart TD
       --name vitis-builder \
       --net=host \
       -e TERM=xterm-256color \
-      -v /home/syvesdh/NinoxWorkspace/kv260-workspace:/home/syvesdh/NinoxWorkspace/kv260-workspace \
-      -v /home/syvesdh/Xilinx:/tools/Xilinx \
+      -v $(pwd):$(pwd) \
+      -v ~/Xilinx:/tools/Xilinx \
       -v /opt/Xilinx:/opt/Xilinx \
       ubuntu:20.04 bash
    ```
@@ -294,16 +293,16 @@ flowchart TD
    ```
 
 3. **Build the Platform**:
-   Navigate to the platform directory [kria-vitis-platforms/kv260](file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/kria-vitis-platforms/kv260) inside the container and build:
+   Navigate to the platform directory [kria-vitis-platforms/kv260](smartapp-modified/kv260-smartapp-platform/kria-vitis-platforms/kv260) inside the container and build:
    ```bash
-      cd /home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/kria-vitis-platforms/kv260
+      cd smartapp-modified/kv260-smartapp-platform/kria-vitis-platforms/kv260
       make platform PFM=kv260_ispMipiRx_vcu_DP
    ```
 
 4. **Build the DPU Overlay**:
    Return to the root of the platform folder inside the container:
    ```bash
-      cd /home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform
+      cd smartapp-modified/kv260-smartapp-platform
    ```
    Extract `DPUCZDX8G.tar.gz` into `Vitis-AI/dsa`. Apply the VVAS custom configurations:
    ```bash
@@ -335,7 +334,7 @@ flowchart TD
 
    Navigate to the directory, launch the container (with or without `sudo` depending on the setup above), and compile the models:
    ```bash
-   cd /home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/Vitis-AI
+   cd smartapp-modified/kv260-smartapp-platform/Vitis-AI
    # Run without sudo (if configured above) or prefix with sudo
    ./docker_run.sh xilinx/vitis-ai:2.5
 
@@ -370,12 +369,12 @@ flowchart TD
 
 
 #### Phase 2: Custom Linux Image Building (`yocto-xilinx`)
-*Note: Due to library compatibility issues on Ubuntu 24.04 hosts, you must run this compilation inside the custom Ubuntu 24.04 builder container. For complete configuration details, refer to the [yocto-xilinx/readme.md](file:///home/syvesdh/NinoxWorkspace/kv260-workspace/yocto-xilinx/readme.md) file.*
+*Note: Due to library compatibility issues on Ubuntu 24.04 hosts, you must run this compilation inside the custom Ubuntu 24.04 builder container. For complete configuration details, refer to the [yocto-xilinx/readme.md](yocto-xilinx/readme.md) file.*
 
 1. **Build the Docker Image**:
    From your workspace directory on the host:
    ```bash
-   cd /home/syvesdh/NinoxWorkspace/kv260-workspace
+   cd kv260-workspace
    docker build -t kv260-build-env:24.04 .
    ```
 
@@ -386,8 +385,8 @@ flowchart TD
      --name kv260-yocto-env \
      --net host \
      --security-opt seccomp=unconfined \
-     -v /home/syvesdh/NinoxWorkspace/kv260-workspace:/home/syvesdh/NinoxWorkspace/kv260-workspace \
-     -v ~/Downloads:/home/syvesdh/Downloads \
+     -v $(pwd):$(pwd) \
+     -v ~/Downloads:~/Downloads \
      kv260-build-env:24.04 /bin/bash
    ```
    *(Note: The `--security-opt seccomp=unconfined` option is critical to allow `pseudo` / fakeroot during bitbake.)*
@@ -572,8 +571,8 @@ cd kv260-smartapp-cli
 docker build --target prod . -t ninoctl
 docker run -it ninoctl
 ```
-Refer to [`testlines.md`](file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/testlines.md) for pre-defined test command arguments for quantization, compilation, and deployment.
+Refer to [`testlines.md`](smartapp-modified/testlines.md) for pre-defined test command arguments for quantization, compilation, and deployment.
 
 ##### 4.5: Native State Orchestration via Device Twins (Alternative/Upgrade)
 Instead of executing commands manually via sockets and the Go CLI, KubeEdge supports native, declarative hardware management using Device Twins (CRDs) over MQTT.
-Refer to the [`kubeedge_integration_guide.md`](file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kubeedge_integration_guide.md) for instructions on defining `DeviceModel`/`DeviceInstance` custom resources, launching the Python MQTT mapper on the board to program the FPGA overlays, and patching twin states natively using `kubectl patch`.
+Refer to the [`kubeedge_integration_guide.md`](smartapp-modified/kubeedge_integration_guide.md) for instructions on defining `DeviceModel`/`DeviceInstance` custom resources, launching the Python MQTT mapper on the board to program the FPGA overlays, and patching twin states natively using `kubectl patch`.
