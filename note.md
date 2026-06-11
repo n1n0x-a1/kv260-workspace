@@ -436,25 +436,37 @@ flowchart TD
    `poky/build/tmp/deploy/images/zynqmp-generic/petalinux-image-minimal-zynqmp-generic.wic.gz`
 
 2. **Expand the Root Filesystem Partition (Required)**:
-   By default, the flashed Yocto image root partition is only ~440MB and will run out of space. You must expand it to utilize the full size of your SD card:
-   * **Unmount the partitions** if they were auto-mounted on the host:
-     ```bash
-     sudo umount -l /dev/sda1
-     sudo umount -l /dev/sda2
-     ```
-   * **Resize partition 2** (`ROOTFS`) to fill 100% of the SD card:
-     ```bash
-     sudo parted /dev/sda resizepart 2 100%
-     ```
-   * **Check filesystem integrity** (required before resizing):
-     ```bash
-     sudo e2fsck -f /dev/sda2
-     ```
-   * **Expand the ext4 filesystem** to match the new partition size:
-     ```bash
-     sudo resize2fs /dev/sda2
-     ```
-   *(Note: The root filesystem on `/dev/sda2` will now be resized to the full size of the SD card (approx. 29.7 GB).*
+   By default, the flashed Yocto image root partition is only ~440MB and will run out of space when copying models/videos. Choose one of the following methods to allocate space:
+
+   * **Option A: Host-Side Partition Expansion (Fastest, No Rebuild)**:
+     If you have already flashed the default image and want to resize it directly on your host computer:
+     * **Unmount the partitions** if they were auto-mounted on the host:
+       ```bash
+       sudo umount -l /dev/sda1
+       sudo umount -l /dev/sda2
+       ```
+     * **Resize partition 2** (`ROOTFS`) to fill 100% of the SD card:
+       ```bash
+       sudo parted /dev/sda resizepart 2 100%
+       ```
+     * **Check filesystem integrity** (required before resizing):
+       ```bash
+       sudo e2fsck -f /dev/sda2
+       ```
+     * **Expand the ext4 filesystem** to match the new partition size:
+       ```bash
+       sudo resize2fs /dev/sda2
+       ```
+     *(Note: The root filesystem on `/dev/sda2` will now be resized to the full size of the SD card (approx. 29.7 GB).*
+
+   * **Option B: Allocate Rootfs Space in Yocto (Cleanest & Standardized)**:
+     If you want the flashed image to automatically contain plenty of free space out-of-the-box:
+     * Ensure `IMAGE_ROOTFS_EXTRA_SPACE = "4194304"` is appended to your `conf/local.conf` (pre-configured).
+     * Rebuild the image in your build container:
+       ```bash
+       bitbake petalinux-image-minimal
+       ```
+     * Flash the new `.wic.gz` output with balenaEtcher. No manual resizing commands are needed.
 
 3. **Copy Boot Assets**:
    * Mount the `BOOT` partition of the SD card on your computer and copy/replace the repo's `system.dtb` file to the `BOOT` partition of the SD card.
