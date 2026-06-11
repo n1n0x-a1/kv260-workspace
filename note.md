@@ -454,6 +454,9 @@ flowchart TD
 
 #### Detailed Transfer Steps
 
+> [!TIP]
+> **SSH Server is Pre-configured**: The compiled Yocto image automatically packages `openssh` and enables `debug-tweaks`. This means an SSH daemon will run out-of-the-box upon boot, allowing passwordless login for the `root` user.
+
 Once the board is booted and connected to the network, use SSH/SCP to transfer your custom hardware overlay, models, and application files:
 
 1. **Deploy DPU Hardware Overlay on KV260 (`.bit`, `.xclbin`)**:
