@@ -566,7 +566,8 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
 ##### 🖥️ Master VM Deployment
 
 * **Deploy DPU Architecture File on Master VM (`arch.json`)**:
-  * Copy the generated `arch.json` file from your Vitis synthesis host to your Kubernetes Master VM.
+  * The canonical architecture file is located at `smartapp-modified/kv260-smartapp-clusterserver/need/arch.json` (fingerprint: `0x101000016010406`).
+  * Copy this `arch.json` file from your host workspace to your Kubernetes Master VM.
   * Place it in the directory where the Vitis-AI compiler is run, so that `vai_c` compiled model versions align with your physical DPU logic configuration.
 
 ---
