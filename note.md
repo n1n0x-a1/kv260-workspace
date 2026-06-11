@@ -436,10 +436,12 @@ flowchart TD
    `poky/build/tmp/deploy/images/zynqmp-generic/petalinux-image-minimal-zynqmp-generic.wic.gz`
 
 2. **Expand the Root Filesystem Partition (Required)**:
-   By default, the flashed Yocto image root partition is only ~440MB and will run out of space when copying models/videos. Choose one of the following methods to allocate space:
+   By default, the flashed Yocto image root partition is only ~440MB. Choose one of the following methods to allocate space:
 
-   * **Option A: Host-Side Partition Expansion (Fastest, No Rebuild)**:
-     If you have already flashed the default image and want to resize it directly on your host computer:
+   * **If you used Option B in Phase 2 (allocated space via Yocto configuration)**:
+     The root partition is already expanded to 4.4GB out-of-the-box. You can **skip** this step entirely.
+   * **If you are using the default image size and need to expand it manually**:
+     Unmount the partitions on your host computer and resize the partition:
      * **Unmount the partitions** if they were auto-mounted on the host:
        ```bash
        sudo umount -l /dev/sda1
@@ -458,15 +460,6 @@ flowchart TD
        sudo resize2fs /dev/sda2
        ```
      *(Note: The root filesystem on `/dev/sda2` will now be resized to the full size of the SD card (approx. 29.7 GB).*
-
-   * **Option B: Allocate Rootfs Space in Yocto (Cleanest & Standardized)**:
-     If you want the flashed image to automatically contain plenty of free space out-of-the-box:
-     * Ensure `IMAGE_ROOTFS_EXTRA_SPACE = "4194304"` is appended to your `conf/local.conf` (pre-configured).
-     * Rebuild the image in your build container:
-       ```bash
-       bitbake petalinux-image-minimal
-       ```
-     * Flash the new `.wic.gz` output with balenaEtcher. No manual resizing commands are needed.
 
 3. **Copy Boot Assets**:
    * Mount the `BOOT` partition of the SD card on your computer and copy/replace the repo's `system.dtb` file to the `BOOT` partition of the SD card.
