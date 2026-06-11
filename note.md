@@ -389,7 +389,6 @@ flowchart TD
      --net host \
      --security-opt seccomp=unconfined \
      -v $(pwd):$(pwd) \
-     -v ~/Downloads:/home/syvesdh/Downloads \
      kv260-build-env:24.04 /bin/bash
    ```
    *(Note: The `--security-opt seccomp=unconfined` option is critical to allow `pseudo` / fakeroot during bitbake.)*
