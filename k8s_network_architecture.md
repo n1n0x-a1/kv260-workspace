@@ -18,7 +18,6 @@ flowchart TB
     subgraph MasterNode ["☁️ Master VM (Cloud Control Plane)"]
         CoreCloud["KubeEdge CloudCore"]
         APIServer["Kubernetes API Server"]
-        IngressController["Nginx Ingress Controller"]
         
         subgraph VitisPod ["🐳 Vitis-AI Compiler Pod (vitis-backend)"]
             VitisServer["vitis-server.py (Port 82)"]
@@ -47,14 +46,13 @@ flowchart TB
     CoreEdge <--> Containerd
     
     %% Client requests
-    CLI -- "1. Trigger Model Compile (HTTP/TCP 8082)" --> IngressController
-    IngressController --> VitisServer
+    CLI -- "1. Trigger Model Compile (TCP port-forward → ClusterIP 8082)" --> VitisServer
     VitisServer --> VitisCompiler
 
-    CLI -- "2. Load/Unload FPGA Overlays (HTTP/TCP 8080)" --> XmutilServer
+    CLI -- "2. Load/Unload FPGA Overlays (TCP ClusterIP 8080)" --> XmutilServer
     XmutilServer --> XmutilBin
 
-    CLI -- "3. Start Camera App (HTTP/TCP 8084)" --> AppServer
+    CLI -- "3. Start Camera App (hostNetwork, direct TCP 8084)" --> AppServer
     AppServer --> SMSApp
 
     %% Hardware bindings
@@ -83,7 +81,8 @@ flowchart TB
 - **Where is Vitis-AI?**
   - **Vitis-AI runs exclusively on the Master VM** as a containerized pod (`vitis` deployment).
   - **Why?** Quantization, pruning, and compilation (converting deep learning frameworks like PyTorch/TensorFlow to `.xmodel` binaries) are computationally heavy processes that require high CPU/GPU resources. The resource-constrained Kria KV260 board is not suited for running compiler operations.
-  - **Service & Port**: Exposes `vitis-server.py` on container port `82`. The cluster exposes this through service `vitis-service` (target port `8082`) and ingress (`vitis.ai.ninox`).
+  - **Service & Port**: Exposes `vitis-server.py` on container port `82`. The cluster exposes this through service `vitis-service` (ClusterIP, target port `8082`). Access from outside the cluster requires `kubectl port-forward svc/vitis-service 8082:8082` or direct node IP access.
+- **Nginx Ingress**: Not required for current deployment. The `nginx/` manifests are provided as an optional enhancement for hostname-based routing (`vitis.ai.ninox`, `kv260.xmutil.ninox`).
 
 ### 2. Kria KV260 (Edge Node)
 - **Role**: Target hardware device performing real-time inference and hardware overlay manipulation.

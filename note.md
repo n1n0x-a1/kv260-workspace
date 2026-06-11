@@ -579,6 +579,10 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
 *For a complete network layout, port binding lists, and pod-to-node mapping descriptions, refer to the [Kubernetes & KubeEdge Network Architecture Guide](k8s_network_architecture.md).*
 
 ##### 5.1: Cloud-Edge Cluster Connection
+
+> [!NOTE]
+> **Nginx Ingress is optional.** The current deployment uses direct `ClusterIP` service access (via `kubectl port-forward` or node IP) and `hostNetwork: true` for the camera app — no nginx is required.
+
 1. **Initialize CloudCore (on Master VM)**:
    Ensure Kubernetes is running on your Master Node (e.g. Proxmox VM). Run `keadm init` to download and launch the KubeEdge control plane (`cloudcore`):
    ```bash
@@ -593,48 +597,56 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
    ```bash
    keadm join --cloudcore-ipport=<MASTER-IP>:10000 --token=<TOKEN> --kubeedge-version=1.15.0
    ```
-4. **Label the Edge Node (on Master VM/Laptop)**:
+4. **Verify the edge node has joined (on Master VM)**:
+   ```bash
+   kubectl get nodes
+   # The KV260 should appear with STATUS=Ready
+   ```
+5. **Label the Edge Node (on Master VM)**:
    Label the newly joined KV260 node so that targeted KubeEdge workloads are correctly scheduled on it:
    ```bash
    kubectl label node <kv260-node-name> node-role.kubernetes.io/edge=""
-   ```
-5. **Deploy the Ingress Controller (on Master VM/Laptop)**:
-   Set up edge ingress routing on the master:
-   ```bash
-   kubectl apply -k smartapp-modified/kv260-smartapp-clusterserver/nginx
    ```
 
 ##### 5.2: Staging Server Scripts and Host Directory Setup
 Before deploying the pods, we must copy the backend socket server scripts to their target destinations and prepare the environment directories.
 
-- **On the Master VM (vitis-ai compiler backend)**:
-  Copy dependencies and compilation helpers to the Master VM:
-  ```bash
-  # Copy dependencies onto the Master VM
-  scp -r smartapp-modified/kv260-smartapp-clusterserver/need <vm-node>:~/
+**On the Master VM (Vitis-AI compiler backend)**:
+1. **From your host laptop**, copy the `need/` folder to the Master VM:
+   ```bash
+   scp -r smartapp-modified/kv260-smartapp-clusterserver/need <vm-user>@<vm-node>:~/
+   scp smartapp-modified/kv260-smartapp-clusterserver/server/vitis-server.py <vm-user>@<vm-node>:~/
+   ```
+2. **SSH into the Master VM**, then stage dependencies into the Vitis-AI host directory:
+   ```bash
+   # The target directory is the one mounted as /vitis_ai_home and /home/workspace
+   # inside the vitis-ai pod — check vitis-ai.yaml hostPath for path
+   cp ~/need/arch.json <path-to-Vitis-AI>/
+   cp ~/need/my_model.prototxt <path-to-Vitis-AI>/
+   cp -r ~/need/ALLFORDEMO <path-to-Vitis-AI>/
+   cp ~/need/resnet18_quant.py <path-to-Vitis-AI>/src/Vitis-AI-Quantizer/vai_q_pytorch/example/
+   cp ~/vitis-server.py <path-to-Vitis-AI>/
+   ```
+3. **Create the required host volume directories** (these are mounted into the pod):
+   ```bash
+   mkdir -p /dev/shm
+   mkdir -p /opt/xilinx/overlaybins
+   mkdir -p /opt/xilinx/dsa
+   ```
 
-  # On the Master VM:
-  # Copy arch.json, custom configs, and datasets into Vitis-AI folder
-  cp need/arch.json <path-to-Vitis-AI>/
-  cp need/my_model.prototxt <path-to-Vitis-AI>/
-  cp -r need/ALLFORDEMO <path-to-Vitis-AI>/
-  cp need/resnet18_quant.py <path-to-Vitis-AI>/src/Vitis-AI-Quantizer/vai_q_pytorch/example/
-  cp server/vitis-server.py <path-to-Vitis-AI>/
+**On the KV260 Edge Node** *(already done in Phase 4, verify these exist)*:
+```bash
+# Verify xmutil-server.py is present
+ssh root@<kv260-ip-address> "ls /home/petalinux/xmutil-server.py"
 
-  # Create necessary host volumes for Vitis-AI pod deployment
-  mkdir -p /dev/shm
-  mkdir -p /opt/xilinx/overlaybins
-  mkdir -p /opt/xilinx/dsa
-  ```
-- **On the KV260 Edge Node (xmutil & camera app backends)**:
-  Copy the socket server scripts directly to the KV260 filesystem:
-  ```bash
-  # Copy the xmutil-server.py script
-  scp smartapp-modified/kv260-smartapp-clusterserver/server/xmutil-server.py <kv260-node>:/home/petalinux/
-
-  # Copy the app-server.py script
-  scp smartapp-modified/kv260-smartapp-clusterserver/server/app-server.py <kv260-node>:/opt/xilinx/kv260-vvas-sms/app/
-  ```
+# Verify app-server.py is present
+ssh root@<kv260-ip-address> "ls /opt/xilinx/kv260-vvas-sms/app/app-server.py"
+```
+If missing, copy them:
+```bash
+scp smartapp-modified/kv260-smartapp-clusterserver/server/xmutil-server.py root@<kv260-ip-address>:/home/petalinux/
+scp smartapp-modified/kv260-smartapp-clusterserver/server/app-server.py root@<kv260-ip-address>:/opt/xilinx/kv260-vvas-sms/app/
+```
 
 ##### 5.3: Deploying Orchestrated Workloads (on Master VM/Laptop)
 Deploy the compiler, hardware overlay manager, and camera application pods to the cluster:
