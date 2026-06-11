@@ -251,6 +251,9 @@ flowchart TD
 
 ### Detailed Implementation Phases
 
+> [!TIP]
+> For a visual overview of the KubeEdge cluster architecture, node interactions, and network ports used by our Go CLI and backend services, refer to the [Kubernetes & KubeEdge Network Architecture Guide](k8s_network_architecture.md).
+
 #### Phase 1: Hardware & AI Overlay Preparation (`smartapp-modified/kv260-smartapp-platform`)
 > [!NOTE]
 > Vitis/Vivado 2022.1 requires an Ubuntu 20.04 environment. If your host is Ubuntu 24.04, you must build the platform inside an Ubuntu 20.04 container mapping your host's Xilinx tools. 
@@ -491,6 +494,8 @@ flowchart TD
    * Ensure the board has a valid IP address and network access.
 
 #### Phase 4: Setting up KubeEdge Communication & Pod Deployment
+
+*For a complete network layout, port binding lists, and pod-to-node mapping descriptions, refer to the [Kubernetes & KubeEdge Network Architecture Guide](k8s_network_architecture.md).*
 
 ##### 4.1: Cloud-Edge Cluster Connection
 1. **Initialize CloudCore (on Master VM)**:
