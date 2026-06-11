@@ -592,7 +592,7 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
    ```
 2. **Retrieve Node Join Token (on Master VM)**:
    ```bash
-   sudo keadm gettoken
+   sudo keadm gettoken --kube-config=$HOME/.kube/config
    ```
 3. **Join Edge Node (on KV260)**:
    Run `keadm join` with `sudo` on the KV260 to connect the board as a managed KubeEdge node:
