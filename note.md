@@ -454,26 +454,62 @@ flowchart TD
 
 #### Detailed Transfer Steps
 
+Choose one of the two methods below to deploy your custom hardware overlay, models, and application to the edge device:
+
+##### 💿 Method A: Direct Offline Copy (via SD Card Mount)
+*Recommended for initial provisioning before booting the board.*
+
+1. **Flash the SD card** with BalenaEtcher using your compiled Yocto image (`petalinux-image-minimal-zynqmp-generic.wic.gz`).
+2. **Mount the SD card's `ROOTFS` partition** on your host computer (it will mount automatically or can be mounted manually, e.g., to `/media/$USER/ROOTFS`).
+3. **Copy the compiled hardware overlay** directly to the mounted SD card:
+   ```bash
+   # Create firmware destination directory on the SD card:
+   sudo mkdir -p /media/$USER/ROOTFS/lib/firmware/xilinx/kv260-vvas-sms
+
+   # Copy the synthesized .bit, .xclbin, .dtsi, and shell.json files
+   sudo cp smartapp-modified/kv260-smartapp-platform/change/petalinux_new/meta-user/recipes-apps/kv260-vvas-sms/files/* /media/$USER/ROOTFS/lib/firmware/xilinx/kv260-vvas-sms/
+   ```
+4. **Copy the model folder and C++ app files** directly to the mounted SD card:
+   ```bash
+   # Create app destination directory on the SD card:
+   sudo mkdir -p /media/$USER/ROOTFS/opt/xilinx/kv260-vvas-sms/app/
+
+   # Copy compiled models and application source scripts:
+   sudo cp -r smartapp-modified/kv260-smartapp-platform/change/petalinux_new/meta-user/recipes-apps/kv260-vvas-sms-app/files/* /media/$USER/ROOTFS/opt/xilinx/kv260-vvas-sms/app/
+   sudo cp -r smartapp-modified/kv260-smartapp-platform/change/petalinux_new/meta-user/recipes-apps/kv260-vvas-sms-models/files/* /media/$USER/ROOTFS/opt/xilinx/kv260-vvas-sms/app/
+   ```
+5. **Safely unmount the SD card** and insert it into the KV260 board. Once booted, the Kubernetes pods (which mount the host's `/lib/firmware` and `/opt/xilinx` directories) will immediately find the apps and models ready to run.
+
+##### 🌐 Method B: Network Copy (via SSH/SCP)
+*Recommended for rapid testing after the board is already booted and connected to the network.*
+
 1. **Deploy DPU Hardware Overlay on KV260 (`.bit`, `.xclbin`)**:
-   * Create the application firmware folder on the target node or mount directory:
+   * Create the application firmware folder on the target node:
      ```bash
-     mkdir -p /lib/firmware/xilinx/kv260-vvas-sms
+     ssh root@<kv260-ip-address> "mkdir -p /lib/firmware/xilinx/kv260-vvas-sms"
      ```
-   * Copy the synthesized `.bit` (converted to `.bin` along with device-tree overlay `.dtbo` if using standard shell setup) and `.xclbin` files to:
+   * Secure copy (SCP) the synthesized overlay files to the node:
      ```bash
-     /lib/firmware/xilinx/kv260-vvas-sms/
+     scp smartapp-modified/kv260-smartapp-platform/change/petalinux_new/meta-user/recipes-apps/kv260-vvas-sms/files/* root@<kv260-ip-address>:/lib/firmware/xilinx/kv260-vvas-sms/
      ```
    * These files will be loaded dynamically by `xmutil` during Phase 4.
 
-2. **Deploy DPU Architecture File on Master VM (`arch.json`)**:
-   * Copy the generated `arch.json` file from your Vitis synthesis host to your Kubernetes Master VM.
-   * Place it in the directory where the Vitis-AI compiler is run, so that `vai_c` compiled model versions align with your physical DPU logic configuration.
-
-3. **Deploy Compiled Models on KV260 (`.xmodel`)**:
-   * Transfer the compiled model `.xmodel` files (e.g., YOLOv3 or Face Mask Detection) to the camera application directory on the board:
+2. **Deploy Compiled Models & App Files on KV260**:
+   * Create the application directory on the target node:
      ```bash
-     /opt/xilinx/kv260-vvas-sms/app/
+     ssh root@<kv260-ip-address> "mkdir -p /opt/xilinx/kv260-vvas-sms/app/"
      ```
+   * Secure copy (SCP) the compiled models and application source scripts:
+     ```bash
+     scp -r smartapp-modified/kv260-smartapp-platform/change/petalinux_new/meta-user/recipes-apps/kv260-vvas-sms-app/files/* root@<kv260-ip-address>:/opt/xilinx/kv260-vvas-sms/app/
+     scp -r smartapp-modified/kv260-smartapp-platform/change/petalinux_new/meta-user/recipes-apps/kv260-vvas-sms-models/files/* root@<kv260-ip-address>:/opt/xilinx/kv260-vvas-sms/app/
+     ```
+
+##### 🖥️ Master VM Deployment
+
+* **Deploy DPU Architecture File on Master VM (`arch.json`)**:
+  * Copy the generated `arch.json` file from your Vitis synthesis host to your Kubernetes Master VM.
+  * Place it in the directory where the Vitis-AI compiler is run, so that `vai_c` compiled model versions align with your physical DPU logic configuration.
 
 ---
 
