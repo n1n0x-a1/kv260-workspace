@@ -252,7 +252,9 @@ flowchart TD
 ### Detailed Implementation Phases
 
 #### Phase 1: Hardware & AI Overlay Preparation (`smartapp-modified/kv260-smartapp-platform`)
-*Note: Vitis/Vivado 2022.1 requires an Ubuntu 20.04 environment. If your host is Ubuntu 24.04, you must build the platform inside an Ubuntu 20.04 container mapping your host's Xilinx tools.*
+> [!NOTE]
+> Vitis/Vivado 2022.1 requires an Ubuntu 20.04 environment. If your host is Ubuntu 24.04, you must build the platform inside an Ubuntu 20.04 container mapping your host's Xilinx tools. 
+> For detailed instructions on downloading, preparing host directories, installing dependencies, and running the graphical installer container, refer to the [Vitis Installation Guide](file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/vitis_installation_guide.md).
 
 > [!NOTE]
 > Throughout this guide, `<repo_path>` refers to `/home/syvesdh/NinoxWorkspace`.
@@ -292,7 +294,7 @@ flowchart TD
    ```
 
 3. **Build the Platform**:
-   Navigate to the platform directory inside the container and build:
+   Navigate to the platform directory [kria-vitis-platforms/kv260](file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/kria-vitis-platforms/kv260) inside the container and build:
    ```bash
       cd /home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/kria-vitis-platforms/kv260
       make platform PFM=kv260_ispMipiRx_vcu_DP
@@ -489,7 +491,9 @@ flowchart TD
    * Hit `Enter` on your screen session terminal to wake up the prompt and log in using `root` / `nino123x`.
    * Ensure the board has a valid IP address and network access.
 
-#### Phase 4: Setting up KubeEdge Communication
+#### Phase 4: Setting up KubeEdge Communication & Pod Deployment
+
+##### 4.1: Cloud-Edge Cluster Connection
 1. **Initialize CloudCore (on Master VM)**:
    Ensure Kubernetes is running on your Master Node (e.g. Proxmox VM). Run `keadm init` to download and launch the KubeEdge control plane (`cloudcore`):
    ```bash
@@ -504,10 +508,72 @@ flowchart TD
    ```bash
    keadm join --cloudcore-ipport=<MASTER-IP>:10000 --token=<TOKEN> --kubeedge-version=1.15.0
    ```
-4. **Deploy Privileged Containers (on Master VM)**:
-   Deploy the `xmutil` and camera app manifests using `kubectl`:
+4. **Label the Edge Node (on Master VM/Laptop)**:
+   Label the newly joined KV260 node so that targeted KubeEdge workloads are correctly scheduled on it:
    ```bash
-   kubectl apply -f xmutil.yaml
-   kubectl apply -f app-pod.yaml
+   kubectl label node <kv260-node-name> node-role.kubernetes.io/edge=""
    ```
-   *(Ensure these pods run as `privileged: true` with `/sys`, `/config`, and `/dev` mounted to allow direct hardware interaction with the DPU and overlays).*
+5. **Deploy the Ingress Controller (on Master VM/Laptop)**:
+   Set up edge ingress routing on the master:
+   ```bash
+   kubectl apply -k kv260-smartapp-clusterserver/nginx
+   ```
+
+##### 4.2: Staging Server Scripts and Host Directory Setup
+Before deploying the pods, we must copy the backend socket server scripts to their target destinations and prepare the environment directories.
+
+- **On the Master VM (vitis-ai compiler backend)**:
+  Copy dependencies and compilation helpers to the Master VM:
+  ```bash
+  # Copy dependencies onto the Master VM
+  scp -r kv260-smartapp-clusterserver/need <vm-node>:~/
+
+  # On the Master VM:
+  # Copy arch.json, custom configs, and datasets into Vitis-AI folder
+  cp need/arch.json <path-to-Vitis-AI>/
+  cp need/my_model.prototxt <path-to-Vitis-AI>/
+  cp -r need/ALLFORDEMO <path-to-Vitis-AI>/
+  cp need/resnet18_quant.py <path-to-Vitis-AI>/src/Vitis-AI-Quantizer/vai_q_pytorch/example/
+  cp server/vitis-server.py <path-to-Vitis-AI>/
+
+  # Create necessary host volumes for Vitis-AI pod deployment
+  mkdir -p /dev/shm
+  mkdir -p /opt/xilinx/overlaybins
+  mkdir -p /opt/xilinx/dsa
+  ```
+- **On the KV260 Edge Node (xmutil & camera app backends)**:
+  Copy the socket server scripts directly to the KV260 filesystem:
+  ```bash
+  # Copy the xmutil-server.py script
+  scp server/xmutil-server.py <kv260-node>:/home/petalinux/
+
+  # Copy the app-server.py script
+  scp server/app-server.py <kv260-node>:/opt/xilinx/kv260-vvas-sms/app/
+  ```
+
+##### 4.3: Deploying Orchestrated Workloads (on Master VM/Laptop)
+Deploy the compiler, hardware overlay manager, and camera application pods to the cluster:
+```bash
+# Deploy Vitis AI compiler pod (on master)
+kubectl apply -f kv260-smartapp-clusterserver/deployment/vitis-ai.yaml
+
+# Deploy xmutil hardware manager pod (on KV260)
+kubectl apply -f kv260-smartapp-clusterserver/deployment/xmutil.yaml
+
+# Deploy camera application pod (on KV260)
+kubectl apply -f kv260-smartapp-clusterserver/deployment/app-pod.yaml
+```
+*(Ensure these pods run as `privileged: true` with `/sys`, `/config`, and `/dev` mounted to allow direct hardware interaction with the DPU and overlays).*
+
+##### 4.4: Command Line Interface (`ninoctl`) and Remote Execution
+Build and run the `ninoctl` client inside its container to trigger remote quantization, compilation, and deployment commands:
+```bash
+cd kv260-smartapp-cli
+docker build --target prod . -t ninoctl
+docker run -it ninoctl
+```
+Refer to [`testlines.md`](file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/testlines.md) for pre-defined test command arguments for quantization, compilation, and deployment.
+
+##### 4.5: Native State Orchestration via Device Twins (Alternative/Upgrade)
+Instead of executing commands manually via sockets and the Go CLI, KubeEdge supports native, declarative hardware management using Device Twins (CRDs) over MQTT.
+Refer to the [`kubeedge_integration_guide.md`](file:///home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kubeedge_integration_guide.md) for instructions on defining `DeviceModel`/`DeviceInstance` custom resources, launching the Python MQTT mapper on the board to program the FPGA overlays, and patching twin states natively using `kubectl patch`.
