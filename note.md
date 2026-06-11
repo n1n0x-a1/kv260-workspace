@@ -475,10 +475,13 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
      ```bash
      ssh root@<kv260-ip-address> "mkdir -p /opt/xilinx/kv260-vvas-sms/app/"
      ```
-   * Secure copy (SCP) the compiled models and application source scripts:
+   * Secure copy (SCP) the application source scripts:
      ```bash
      scp -r smartapp-modified/kv260-smartapp-platform/change/petalinux_new/meta-user/recipes-apps/kv260-vvas-sms-app/files/* root@<kv260-ip-address>:/opt/xilinx/kv260-vvas-sms/app/
-     scp -r smartapp-modified/kv260-smartapp-platform/change/petalinux_new/meta-user/recipes-apps/kv260-vvas-sms-models/files/* root@<kv260-ip-address>:/opt/xilinx/kv260-vvas-sms/app/
+     ```
+   * Secure copy (SCP) the compiled models (copies the `models.b3136` folder):
+     ```bash
+     scp -r smartapp-modified/kv260-smartapp-platform/change/petalinux_new/meta-user/recipes-apps/kv260-vvas-sms-models/files/* root@<kv260-ip-address>:/opt/xilinx/kv260-vvas-sms/
      ```
 
 ##### 🖥️ Master VM Deployment
