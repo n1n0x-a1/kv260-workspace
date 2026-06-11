@@ -347,7 +347,10 @@ flowchart TD
    ```
 
 6. **Stage and Synchronize Recipes**:
-   Stage the generated hardware and model artifacts to the local recipes directory for packaging/archiving:
+   Stage the generated hardware and model artifacts to the local recipes directory for packaging/archiving. Navigate to the application platform directory first:
+   ```bash
+   cd smartapp-modified/kv260-smartapp-platform
+   ```
    * **Staging Hardware Overlay**:
      Copy the synthesized `.bit` and `.xclbin` files, along with the device tree overlay configurations:
      ```bash
