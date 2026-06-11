@@ -464,6 +464,7 @@ flowchart TD
       ```bash
       /etc/init.d/sshd start
       ```
+    * Exit the `screen` session to return to your host command line by pressing **`Ctrl+A`** followed by **`K`**, and then confirming with **`Y`**.
 
 ---
 
