@@ -584,7 +584,9 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
 > **Nginx Ingress is optional.** The current deployment uses direct `ClusterIP` service access (via `kubectl port-forward` or node IP) and `hostNetwork: true` for the camera app — no nginx is required.
 
 1. **Initialize CloudCore (on Master VM)**:
-   Ensure Kubernetes is running on your Master Node (e.g. Proxmox VM). Run `keadm init` to download and launch the KubeEdge control plane (`cloudcore`):
+   Ensure Kubernetes is running on your Master Node. Get the Master VM's IP by running `kubectl get nodes -o wide` (look for the `INTERNAL-IP` of the master node, which is `192.168.123.210` in the Ninox infrastructure) or run `ip route get 1.1.1.1 | awk '{print $7}'` directly on the master shell.
+   
+   Run `keadm init` to download and launch the KubeEdge control plane (`cloudcore`):
    ```bash
    keadm init --advertise-address=<MASTER-IP> --profile-version=1.15.0
    ```
