@@ -434,9 +434,32 @@ flowchart TD
 1. **Flash OS**:
    Insert the SD card, open **balenaEtcher**, and flash the compiled image output:
    `poky/build/tmp/deploy/images/zynqmp-generic/petalinux-image-minimal-zynqmp-generic.wic.gz`
-2. **Copy Boot Assets**:
+
+2. **Expand the Root Filesystem Partition (Required)**:
+   By default, the flashed Yocto image root partition is only ~440MB and will run out of space. You must expand it to utilize the full size of your SD card:
+   * **Unmount the partitions** if they were auto-mounted on the host:
+     ```bash
+     sudo umount -l /dev/sda1
+     sudo umount -l /dev/sda2
+     ```
+   * **Resize partition 2** (`ROOTFS`) to fill 100% of the SD card:
+     ```bash
+     sudo parted /dev/sda resizepart 2 100%
+     ```
+   * **Check filesystem integrity** (required before resizing):
+     ```bash
+     sudo e2fsck -f /dev/sda2
+     ```
+   * **Expand the ext4 filesystem** to match the new partition size:
+     ```bash
+     sudo resize2fs /dev/sda2
+     ```
+   *(Note: The root filesystem on `/dev/sda2` will now be resized to the full size of the SD card (approx. 29.7 GB).*
+
+3. **Copy Boot Assets**:
    * Mount the `BOOT` partition of the SD card on your computer and copy/replace the repo's `system.dtb` file to the `BOOT` partition of the SD card.
-3. **Power Up & Initial Config**:
+
+4. **Power Up & Initial Config**:
    * Insert the SD card into the KV260.
    * Connect a micro-USB cable from the host machine to the micro-USB UART port (`J4`, located on the bottom edge near the SD card slot).
    * Programmed over a single cable, the board exposes four `ttyUSB` channels on the host (typically `ttyUSB0` through `ttyUSB3`). You will connect to the **Processing System (PS) UART** channel (typically `/dev/ttyUSB1`):
@@ -449,28 +472,25 @@ flowchart TD
      *(Note: If the terminal stays blank after hitting `Enter` a few times, kill the session using `Ctrl+A` then `K` and try the adjacent port `/dev/ttyUSB0` or `/dev/ttyUSB2` depending on how your host enumerates the USB stack.)*
    * Power on the board by plugging in the 12V power adapter.
    * Hit `Enter` on your screen session terminal to wake up the prompt and log in using `root` / `nino123x`.
-    * Ensure the board has a valid IP address and network access:
-      ```bash
-      ip a show eth0
-      ```
-      If no IPv4 address (under `inet`) is assigned, manually trigger a DHCP lease request:
-      ```bash
-      udhcpc -i eth0
-      ```
-      Verify connectivity by pinging an external domain:
-      ```bash
-      ping google.com
-      ```
-      Record the obtained IP address; this is your `<kv260-ip-address>` for Phase 4.
-    * Start the SSH daemon manually:
-      ```bash
-      /etc/init.d/sshd status
-      /etc/init.d/sshd start
+   * Ensure the board has a valid IP address and network access:
+     ```bash
+     udhcpc -i eth0            # Check/renew IP lease
+     ip a show eth0            # Note the <kv260-ip-address>
+     ```
+     Verify connectivity by pinging an external domain:
+     ```bash
+     ping google.com
+     ```
+     Record the obtained IP address; this is your `<kv260-ip-address>` for Phase 4.
+   * Start the SSH daemon manually:
+     ```bash
+     /etc/init.d/sshd status
+     /etc/init.d/sshd start    # Ensure SSH daemon is running
 
-      # Check if the port is listening      
-      netstat -tuln | grep 22
-      ```
-    * Exit the `screen` session to return to your host command line by pressing **`Ctrl+A`** followed by **`K`**, and then confirming with **`Y`**.
+     # Check if the port is listening      
+     netstat -tuln | grep 22
+     ```
+   * Exit the `screen` session to return to your host command line by pressing **`Ctrl+A`** followed by **`K`**, and then confirming with **`Y`**.
 
 ---
 
