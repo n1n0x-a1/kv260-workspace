@@ -207,6 +207,9 @@ PETALINUX_VERSION = "2024.2"
 # Enable virtualization and KubeEdge features for container orchestration
 DISTRO_FEATURES:append = " virtualization"
 IMAGE_INSTALL:append = " kubeedge containerd-opencontainers"
+
+# Add 4GB of extra space to the root filesystem partition for models and videos
+IMAGE_ROOTFS_EXTRA_SPACE = "4194304"
 ```
 
 > 💡 **Tip:** `INHERIT += "rm_work"` clears out temporary build directories after a package is successfully built. This is highly recommended to save tens of gigabytes of storage space.
