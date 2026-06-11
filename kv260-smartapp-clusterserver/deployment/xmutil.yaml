@@ -72,23 +72,20 @@ spec:
   selector:
     name: xmutil-backend
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
 metadata:
-  name: xmutil-ingress
-  annotations:
-    k8s.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  name: xmutil-route
+  namespace: default
 spec:
-  ingressClassName: nginx
+  parentRefs:
+    - name: ninox-gateway
+      namespace: envoy-gateway-system
+      sectionName: https
+  hostnames:
+    - kv260-xmutil.ninox.com
   rules:
-  - host: kv260.xmutil.ninox
-    http:
-      paths:
-        - path: /
-          pathType: Prefix
-          backend:
-            service:
-              name: xmutil-service
-              port:
-                number: 80
+    - backendRefs:
+        - name: xmutil-service
+          port: 8080
+

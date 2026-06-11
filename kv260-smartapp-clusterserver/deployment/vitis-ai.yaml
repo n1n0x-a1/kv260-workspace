@@ -47,18 +47,22 @@ spec:
           type: Directory
       - name: vitis
         hostPath:
-          path: /home/gary/path2vitisai
+          path: /home/k8s/path2vitisai
           type: Directory
       - name: work
         hostPath:
-          path: /home/gary/path2vitisai
+          path: /home/k8s/path2vitisai
           type: Directory
       - name: pyserver
         hostPath:
-          path: /home/gary/kv260-smartapp-auto/kv260-smartapp-clusterserver/server/vitis-server.py
+          path: /home/k8s/vitis-server.py
           type: File
       nodeSelector:
-        id: master
+        kubernetes.io/hostname: master-1.ninox.com
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          effect: NoSchedule
+          operator: Exists
 ---
 apiVersion: v1
 kind: Service
@@ -74,23 +78,20 @@ spec:
   selector:
     name: vitis-backend
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
 metadata:
-  name: vitis-ingress
-  annotations:
-    kubernetes.io/ingress.class: "nginx"
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  name: vitis-route
+  namespace: default
 spec:
-  ingressClassName: nginx
+  parentRefs:
+    - name: ninox-gateway
+      namespace: envoy-gateway-system
+      sectionName: https
+  hostnames:
+    - vitis-ai.ninox.com
   rules:
-  - host: vitis.ai.ninox
-    http:
-      paths:
-        - path: /
-          pathType: Prefix
-          backend:
-            service:
-              name: vitis-service
-              port:
-                number: 82
+    - backendRefs:
+        - name: vitis-service
+          port: 8082
+
