@@ -588,7 +588,7 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
    
    Run `keadm init` to download and launch the KubeEdge control plane (`cloudcore`):
    ```bash
-   keadm init --advertise-address=<MASTER-IP> --profile-version=1.15.0
+   keadm init --advertise-address=<MASTER-IP> --profile version=1.15.0
    ```
 2. **Retrieve Node Join Token (on Master VM)**:
    ```bash
