@@ -457,6 +457,15 @@ flowchart TD
 > [!TIP]
 > **SSH Server is Pre-configured**: The compiled Yocto image automatically packages `openssh` and enables `debug-tweaks`. This means an SSH daemon will run out-of-the-box upon boot, allowing passwordless login for the `root` user.
 
+> [!NOTE]
+> **Finding the KV260 IP Address**:
+> 1. Complete the steps in **Phase 3: Deployment & Booting the KV260** first to flash the SD card, power on the board, and connect to its serial console (`screen`).
+> 2. Once logged in as `root` on the serial console, run:
+>    ```bash
+>    ip a show eth0
+>    ```
+>    Locate the `inet` address (e.g. `192.168.1.100`). Use this value for `<kv260-ip-address>`.
+
 Once the board is booted and connected to the network, use SSH/SCP to transfer your custom hardware overlay, models, and application files:
 
 1. **Deploy DPU Hardware Overlay on KV260 (`.bit`, `.xclbin`)**:
