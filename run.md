@@ -20,7 +20,7 @@ docker run -it \
   --name kv260-yocto-env \
   --net host \
   --security-opt seccomp=unconfined \
-  -v /home/syvesdh/NinoxWorkspace/kv260-workspace:/home/syvesdh/NinoxWorkspace/kv260-workspace \
+  -v $(pwd):$(pwd) \
   -v ~/Downloads:/home/syvesdh/Downloads \
   kv260-build-env:24.04 /bin/bash
 ```

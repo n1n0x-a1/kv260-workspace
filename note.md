@@ -389,7 +389,7 @@ flowchart TD
      --net host \
      --security-opt seccomp=unconfined \
      -v $(pwd):$(pwd) \
-     -v ~/Downloads:~/Downloads \
+     -v ~/Downloads:/home/syvesdh/Downloads \
      kv260-build-env:24.04 /bin/bash
    ```
    *(Note: The `--security-opt seccomp=unconfined` option is critical to allow `pseudo` / fakeroot during bitbake.)*
@@ -477,7 +477,7 @@ flowchart TD
    Insert the SD card, open **balenaEtcher**, and flash the compiled image output:
    `poky/build/tmp/deploy/images/zynqmp-generic/petalinux-image-minimal-zynqmp-generic.wic.gz`
 2. **Copy Boot Assets**:
-    Mount the `BOOT` partition of the SD card on your computer and copy/replace the repo's `system.dtb` file onto it.
+   * Mount the `BOOT` partition of the SD card on your computer and copy/replace the repo's `system.dtb` file to the `BOOT` partition of the SD card.
 3. **Power Up & Initial Config**:
    * Insert the SD card into the KV260.
    * Connect a micro-USB cable from the host machine to the micro-USB UART port (`J4`, located on the bottom edge near the SD card slot).
