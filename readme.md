@@ -243,7 +243,7 @@ We have two choices to finish our work. **Option 2 (using BalenaEtcher)** is hig
 1. Locate your built flashable image:
 `{path_to_workspace}/kv260-yocto/poky/build/tmp/deploy/images/zynqmp-generic/petalinux-image-minimal-zynqmp-generic.wic.gz`
 2. Insert your micro-SD card into your host machine and use **balenaEtcher** to flash that `.wic.gz` file directly onto the card.
-3. Once flashed, open the small **BOOT** partition of the SD card on your computer and copy/replace the `boot.scr` and `system.dtb` files located in the root of this clone repository onto that partition.
+3. Once flashed, open the small **BOOT** partition of the SD card on your computer and copy/replace the `system.dtb` file located in the root of this clone repository onto that partition.
 
 ---
 
