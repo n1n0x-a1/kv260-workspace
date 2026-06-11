@@ -447,7 +447,19 @@ flowchart TD
      *(Note: If the terminal stays blank after hitting `Enter` a few times, kill the session using `Ctrl+A` then `K` and try the adjacent port `/dev/ttyUSB0` or `/dev/ttyUSB2` depending on how your host enumerates the USB stack.)*
    * Power on the board by plugging in the 12V power adapter.
    * Hit `Enter` on your screen session terminal to wake up the prompt and log in using `root` / `nino123x`.
-   * Ensure the board has a valid IP address and network access (e.g. by running `ip a show eth0` to find `<kv260-ip-address>`).
+    * Ensure the board has a valid IP address and network access:
+      ```bash
+      ip a show eth0
+      ```
+      If no IPv4 address (under `inet`) is assigned, manually trigger a DHCP lease request:
+      ```bash
+      udhcpc -i eth0
+      ```
+      Verify connectivity by pinging an external domain:
+      ```bash
+      ping google.com
+      ```
+      Record the obtained IP address; this is your `<kv260-ip-address>` for Phase 4.
 
 ---
 
