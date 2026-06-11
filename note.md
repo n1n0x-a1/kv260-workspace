@@ -460,6 +460,10 @@ flowchart TD
       ping google.com
       ```
       Record the obtained IP address; this is your `<kv260-ip-address>` for Phase 4.
+    * Start the SSH daemon manually:
+      ```bash
+      /etc/init.d/sshd start
+      ```
 
 ---
 
@@ -494,7 +498,11 @@ flowchart TD
 ##### Detailed Transfer Steps
 
 > [!TIP]
-> **SSH Server is Pre-configured**: The compiled Yocto image automatically packages `openssh` and enables `debug-tweaks`. This means an SSH daemon will run out-of-the-box upon boot, allowing passwordless login for the `root` user.
+> **SSH Server is Pre-configured but Needs Manual Start**: The compiled Yocto image automatically packages `openssh` and enables `debug-tweaks`. However, you must start the SSH daemon manually on the board's serial console before connecting:
+> ```bash
+> /etc/init.d/sshd start
+> ```
+> Once started, this allows passwordless login for the `root` user.
 
 Once the board is booted and connected to the network, use SSH/SCP to transfer your custom hardware overlay, models, and application files:
 
