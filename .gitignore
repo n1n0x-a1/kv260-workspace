@@ -4,3 +4,5 @@ kv260-yocto/poky/
 kv260-yocto/source/*/
 # But DO NOT ignore our custom kubeedge layer
 !kv260-yocto/source/meta-kubeedge/
+
+*.wic.gz
