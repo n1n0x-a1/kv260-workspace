@@ -224,23 +224,27 @@ flowchart TD
     subgraph Phase3 [Phase 3: Deployment & Boot]
         I --> J["Flash SD Card using balenaEtcher"]
         J --> K["Copy system.dtb to BOOT partition"]
-        K --> L["Boot KV260 board"]
+        K --> L["Boot KV260 board & get IP"]
     end
 
-    subgraph Phase4 [Phase 4: Cloud-Edge Orchestration]
+    subgraph Phase4 [Phase 4: Artifact Synchronization]
+        L --> Q["Create target directories<br/>on KV260"]
+        Q --> R["SCP Overlay, Models, and Apps<br/>from host to KV260"]
+        D -.-> R
+    end
+
+    subgraph Phase5 [Phase 5: Cloud-Edge Orchestration]
         M["Init cloudcore on Proxmox Master VM<br/>(keadm init)"] --> N["Get Join Token<br/>(keadm gettoken)"]
-        L --> O["Join KV260 to Master<br/>(keadm join --token=...)"]
+        R --> O["Join KV260 to Master<br/>(keadm join --token=...)"]
         N -.-> O
         O --> P["Apply deployment/xmutil.yaml & app-pod.yaml"]
     end
 
-    %% Link Phase 1 output to Phase 3 showing artifact synchronization
-    D -->|"Synchronize & Transfer Artifacts"| J
-
     style Phase1 fill:#1e2e3c,stroke:#3b5670,stroke-width:2px,color:#fff
     style Phase2 fill:#2d1f34,stroke:#5c446a,stroke-width:2px,color:#fff
     style Phase3 fill:#192c19,stroke:#3b5a3b,stroke-width:2px,color:#fff
-    style Phase4 fill:#352a1b,stroke:#66553e,stroke-width:2px,color:#fff
+    style Phase4 fill:#223344,stroke:#446688,stroke-width:2px,color:#fff
+    style Phase5 fill:#352a1b,stroke:#66553e,stroke-width:2px,color:#fff
 
     click A href "smartapp-modified/kv260-smartapp-platform/kria-vitis-platforms" "Open Platform Submodule"
     click B href "smartapp-modified/kv260-smartapp-platform/VVAS" "Open VVAS Submodule"
@@ -424,11 +428,34 @@ flowchart TD
    bitbake petalinux-image-minimal
    ```
 
-### Phase 1 & 2 Completed: Next Steps (Artifact Synchronization)
+#### Phase 3: Deployment & Booting the KV260
+1. **Flash OS**:
+   Insert the SD card, open **balenaEtcher**, and flash the compiled image output:
+   `poky/build/tmp/deploy/images/zynqmp-generic/petalinux-image-minimal-zynqmp-generic.wic.gz`
+2. **Copy Boot Assets**:
+   * Mount the `BOOT` partition of the SD card on your computer and copy/replace the repo's `system.dtb` file to the `BOOT` partition of the SD card.
+3. **Power Up & Initial Config**:
+   * Insert the SD card into the KV260.
+   * Connect a micro-USB cable from the host machine to the micro-USB UART port (`J4`, located on the bottom edge near the SD card slot).
+   * Programmed over a single cable, the board exposes four `ttyUSB` channels on the host (typically `ttyUSB0` through `ttyUSB3`). You will connect to the **Processing System (PS) UART** channel (typically `/dev/ttyUSB1`):
+     ```bash
+     ls /dev/ttyUSB*
+     # Expected output: /dev/ttyUSB0  /dev/ttyUSB1  /dev/ttyUSB2  /dev/ttyUSB3
 
-Once you have completed Phase 1 (synthesis of platform, DPU, models) and Phase 2 (OS compilation), you must synchronize and transfer the build artifacts to their appropriate destinations before booting the board and initiating KubeEdge communication.
+     sudo screen /dev/ttyUSB1 115200
+     ```
+     *(Note: If the terminal stays blank after hitting `Enter` a few times, kill the session using `Ctrl+A` then `K` and try the adjacent port `/dev/ttyUSB0` or `/dev/ttyUSB2` depending on how your host enumerates the USB stack.)*
+   * Power on the board by plugging in the 12V power adapter.
+   * Hit `Enter` on your screen session terminal to wake up the prompt and log in using `root` / `nino123x`.
+   * Ensure the board has a valid IP address and network access (e.g. by running `ip a show eth0` to find `<kv260-ip-address>`).
 
-#### Artifact Distribution Flowchart
+---
+
+#### Phase 4: Artifact Synchronization
+
+Once the board has booted and is connected to the network, you must synchronize and transfer the build artifacts to their appropriate destinations before initiating KubeEdge communication.
+
+##### Artifact Distribution Flowchart
 ```mermaid
 flowchart TD
     %% Styling
@@ -452,19 +479,10 @@ flowchart TD
     C -->|"Copied to App Folder<br/>(Loaded by Camera App)"| K
 ```
 
-#### Detailed Transfer Steps
+##### Detailed Transfer Steps
 
 > [!TIP]
 > **SSH Server is Pre-configured**: The compiled Yocto image automatically packages `openssh` and enables `debug-tweaks`. This means an SSH daemon will run out-of-the-box upon boot, allowing passwordless login for the `root` user.
-
-> [!NOTE]
-> **Finding the KV260 IP Address**:
-> 1. Complete the steps in **Phase 3: Deployment & Booting the KV260** first to flash the SD card, power on the board, and connect to its serial console (`screen`).
-> 2. Once logged in as `root` on the serial console, run:
->    ```bash
->    ip a show eth0
->    ```
->    Locate the `inet` address (e.g. `192.168.1.100`). Use this value for `<kv260-ip-address>`.
 
 Once the board is booted and connected to the network, use SSH/SCP to transfer your custom hardware overlay, models, and application files:
 
@@ -477,7 +495,7 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
      ```bash
      scp smartapp-modified/kv260-smartapp-platform/change/petalinux_new/meta-user/recipes-apps/kv260-vvas-sms/files/* root@<kv260-ip-address>:/lib/firmware/xilinx/kv260-vvas-sms/
      ```
-   * These files will be loaded dynamically by `xmutil` during Phase 4.
+   * These files will be loaded dynamically by `xmutil` during Phase 5.
 
 2. **Deploy Compiled Models & App Files on KV260**:
    * Create the application directory on the target node:
@@ -501,32 +519,11 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
 
 ---
 
-#### Phase 3: Deployment & Booting the KV260
-1. **Flash OS**:
-   Insert the SD card, open **balenaEtcher**, and flash the compiled image output:
-   `poky/build/tmp/deploy/images/zynqmp-generic/petalinux-image-minimal-zynqmp-generic.wic.gz`
-2. **Copy Boot Assets**:
-   * Mount the `BOOT` partition of the SD card on your computer and copy/replace the repo's `system.dtb` file to the `BOOT` partition of the SD card.
-3. **Power Up & Initial Config**:
-   * Insert the SD card into the KV260.
-   * Connect a micro-USB cable from the host machine to the micro-USB UART port (`J4`, located on the bottom edge near the SD card slot).
-   * Programmed over a single cable, the board exposes four `ttyUSB` channels on the host (typically `ttyUSB0` through `ttyUSB3`). You will connect to the **Processing System (PS) UART** channel (typically `/dev/ttyUSB1`):
-     ```bash
-     ls /dev/ttyUSB*
-     # Expected output: /dev/ttyUSB0  /dev/ttyUSB1  /dev/ttyUSB2  /dev/ttyUSB3
-
-     sudo screen /dev/ttyUSB1 115200
-     ```
-     *(Note: If the terminal stays blank after hitting `Enter` a few times, kill the session using `Ctrl+A` then `K` and try the adjacent port `/dev/ttyUSB0` or `/dev/ttyUSB2` depending on how your host enumerates the USB stack.)*
-   * Power on the board by plugging in the 12V power adapter.
-   * Hit `Enter` on your screen session terminal to wake up the prompt and log in using `root` / `nino123x`.
-   * Ensure the board has a valid IP address and network access.
-
-#### Phase 4: Setting up KubeEdge Communication & Pod Deployment
+#### Phase 5: Setting up KubeEdge Communication & Pod Deployment
 
 *For a complete network layout, port binding lists, and pod-to-node mapping descriptions, refer to the [Kubernetes & KubeEdge Network Architecture Guide](k8s_network_architecture.md).*
 
-##### 4.1: Cloud-Edge Cluster Connection
+##### 5.1: Cloud-Edge Cluster Connection
 1. **Initialize CloudCore (on Master VM)**:
    Ensure Kubernetes is running on your Master Node (e.g. Proxmox VM). Run `keadm init` to download and launch the KubeEdge control plane (`cloudcore`):
    ```bash
@@ -552,7 +549,7 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
    kubectl apply -k kv260-smartapp-clusterserver/nginx
    ```
 
-##### 4.2: Staging Server Scripts and Host Directory Setup
+##### 5.2: Staging Server Scripts and Host Directory Setup
 Before deploying the pods, we must copy the backend socket server scripts to their target destinations and prepare the environment directories.
 
 - **On the Master VM (vitis-ai compiler backend)**:
@@ -584,7 +581,7 @@ Before deploying the pods, we must copy the backend socket server scripts to the
   scp server/app-server.py <kv260-node>:/opt/xilinx/kv260-vvas-sms/app/
   ```
 
-##### 4.3: Deploying Orchestrated Workloads (on Master VM/Laptop)
+##### 5.3: Deploying Orchestrated Workloads (on Master VM/Laptop)
 Deploy the compiler, hardware overlay manager, and camera application pods to the cluster:
 ```bash
 # Deploy Vitis AI compiler pod (on master)
@@ -598,7 +595,7 @@ kubectl apply -f kv260-smartapp-clusterserver/deployment/app-pod.yaml
 ```
 *(Ensure these pods run as `privileged: true` with `/sys`, `/config`, and `/dev` mounted to allow direct hardware interaction with the DPU and overlays).*
 
-##### 4.4: Command Line Interface (`ninoctl`) and Remote Execution
+##### 5.4: Command Line Interface (`ninoctl`) and Remote Execution
 Build and run the `ninoctl` client inside its container to trigger remote quantization, compilation, and deployment commands:
 ```bash
 cd kv260-smartapp-cli
@@ -607,6 +604,6 @@ docker run -it ninoctl
 ```
 Refer to [`testlines.md`](smartapp-modified/testlines.md) for pre-defined test command arguments for quantization, compilation, and deployment.
 
-##### 4.5: Native State Orchestration via Device Twins (Alternative/Upgrade)
+##### 5.5: Native State Orchestration via Device Twins (Alternative/Upgrade)
 Instead of executing commands manually via sockets and the Go CLI, KubeEdge supports native, declarative hardware management using Device Twins (CRDs) over MQTT.
 Refer to the [`kubeedge_integration_guide.md`](smartapp-modified/kubeedge_integration_guide.md) for instructions on defining `DeviceModel`/`DeviceInstance` custom resources, launching the Python MQTT mapper on the board to program the FPGA overlays, and patching twin states natively using `kubectl patch`.
