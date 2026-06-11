@@ -223,7 +223,7 @@ flowchart TD
 
     subgraph Phase3 [Phase 3: Deployment & Boot]
         I --> J["Flash SD Card using balenaEtcher"]
-        J --> K["Copy boot.scr & system.dtb to BOOT partition"]
+        J --> K["Copy system.dtb to BOOT partition"]
         K --> L["Boot KV260 board"]
     end
 
@@ -477,7 +477,7 @@ flowchart TD
    Insert the SD card, open **balenaEtcher**, and flash the compiled image output:
    `poky/build/tmp/deploy/images/zynqmp-generic/petalinux-image-minimal-zynqmp-generic.wic.gz`
 2. **Copy Boot Assets**:
-   Mount the `BOOT` partition of the SD card on your computer and copy/replace the repo's `boot.scr` and `system.dtb` files onto it.
+    Mount the `BOOT` partition of the SD card on your computer and copy/replace the repo's `system.dtb` file onto it.
 3. **Power Up & Initial Config**:
    * Insert the SD card into the KV260.
    * Connect a micro-USB cable from the host machine to the micro-USB UART port (`J4`, located on the bottom edge near the SD card slot).
