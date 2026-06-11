@@ -346,8 +346,11 @@ flowchart TD
    source ./compile_modelzoo.sh
    ```
 
-6. **Stage and Synchronize Recipes**:
-   Stage the generated hardware and model artifacts to the local recipes directory for packaging/archiving. Navigate to the application platform directory first:
+6. **Stage and Synchronize Recipes (Legacy / Archival)**:
+   > [!NOTE]
+   > This step stages files into the legacy application directory for archiving purposes or for the older PetaLinux build flow. Because our modern Yocto build (`yocto-xilinx/kv260-yocto`) compiles a clean base OS image, these staged files are **not** baked into the Yocto image by default. Instead, they will be copied directly to the SD card's `ROOTFS` partition (or sent via SSH) during the **Artifact Synchronization** phase.
+   
+   To archive the files, navigate to the application platform directory:
    ```bash
    cd smartapp-modified/kv260-smartapp-platform
    ```
