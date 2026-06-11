@@ -412,11 +412,13 @@ flowchart TD
 5. **Configure Layers (`conf/bblayers.conf`)**:
    Add the path to `meta-kubeedge` in your `BBLAYERS` list.
 
-6. **Enable Virtualization & KubeEdge (`conf/local.conf`)**:
+6. **Enable Virtualization, KubeEdge, and Allocate Rootfs Space (`conf/local.conf`)**:
    Open `conf/local.conf` and append:
    ```bitbake
     DISTRO_FEATURES:append = " virtualization"
     IMAGE_INSTALL:append = " kubeedge containerd-opencontainers"
+    # Add 4GB of extra space to the root filesystem partition for models and videos
+    IMAGE_ROOTFS_EXTRA_SPACE = "4194304"
    ```
 
 7. **Run the Compilation**:
