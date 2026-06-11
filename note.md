@@ -454,34 +454,7 @@ flowchart TD
 
 #### Detailed Transfer Steps
 
-Choose one of the two methods below to deploy your custom hardware overlay, models, and application to the edge device:
-
-##### 💿 Method A: Direct Offline Copy (via SD Card Mount)
-*Recommended for initial provisioning before booting the board.*
-
-1. **Flash the SD card** with BalenaEtcher using your compiled Yocto image (`petalinux-image-minimal-zynqmp-generic.wic.gz`).
-2. **Mount the SD card's `ROOTFS` partition** on your host computer (it will mount automatically or can be mounted manually, e.g., to `/media/$USER/ROOTFS`).
-3. **Copy the compiled hardware overlay** directly to the mounted SD card:
-   ```bash
-   # Create firmware destination directory on the SD card:
-   sudo mkdir -p /media/$USER/ROOTFS/lib/firmware/xilinx/kv260-vvas-sms
-
-   # Copy the synthesized .bit, .xclbin, .dtsi, and shell.json files
-   sudo cp smartapp-modified/kv260-smartapp-platform/change/petalinux_new/meta-user/recipes-apps/kv260-vvas-sms/files/* /media/$USER/ROOTFS/lib/firmware/xilinx/kv260-vvas-sms/
-   ```
-4. **Copy the model folder and C++ app files** directly to the mounted SD card:
-   ```bash
-   # Create app destination directory on the SD card:
-   sudo mkdir -p /media/$USER/ROOTFS/opt/xilinx/kv260-vvas-sms/app/
-
-   # Copy compiled models and application source scripts:
-   sudo cp -r smartapp-modified/kv260-smartapp-platform/change/petalinux_new/meta-user/recipes-apps/kv260-vvas-sms-app/files/* /media/$USER/ROOTFS/opt/xilinx/kv260-vvas-sms/app/
-   sudo cp -r smartapp-modified/kv260-smartapp-platform/change/petalinux_new/meta-user/recipes-apps/kv260-vvas-sms-models/files/* /media/$USER/ROOTFS/opt/xilinx/kv260-vvas-sms/app/
-   ```
-5. **Safely unmount the SD card** and insert it into the KV260 board. Once booted, the Kubernetes pods (which mount the host's `/lib/firmware` and `/opt/xilinx` directories) will immediately find the apps and models ready to run.
-
-##### 🌐 Method B: Network Copy (via SSH/SCP)
-*Recommended for rapid testing after the board is already booted and connected to the network.*
+Once the board is booted and connected to the network, use SSH/SCP to transfer your custom hardware overlay, models, and application files:
 
 1. **Deploy DPU Hardware Overlay on KV260 (`.bit`, `.xclbin`)**:
    * Create the application firmware folder on the target node:
