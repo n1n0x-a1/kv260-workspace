@@ -586,18 +586,18 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
 1. **Initialize CloudCore (on Master VM)**:
    Ensure Kubernetes is running on your Master Node. Get the Master VM's IP by running `kubectl get nodes -o wide` (look for the `INTERNAL-IP` of the master node, which is `192.168.123.210` in the Ninox infrastructure) or run `ip route get 1.1.1.1 | awk '{print $7}'` directly on the master shell.
    
-   Run `keadm init` to download and launch the KubeEdge control plane (`cloudcore`):
+   Run `keadm init` with `sudo` to download and launch the KubeEdge control plane (`cloudcore`), pointing it to your local kubeconfig:
    ```bash
-   keadm init --advertise-address=<MASTER-IP> --profile version=1.15.0
+   sudo keadm init --advertise-address=<MASTER-IP> --profile version=1.15.0 --kube-config=$HOME/.kube/config
    ```
 2. **Retrieve Node Join Token (on Master VM)**:
    ```bash
-   keadm gettoken
+   sudo keadm gettoken
    ```
 3. **Join Edge Node (on KV260)**:
-   Run `keadm join` on the KV260 to connect the board as a managed KubeEdge node:
+   Run `keadm join` with `sudo` on the KV260 to connect the board as a managed KubeEdge node:
    ```bash
-   keadm join --cloudcore-ipport=<MASTER-IP>:10000 --token=<TOKEN> --kubeedge-version=1.15.0
+   sudo keadm join --cloudcore-ipport=<MASTER-IP>:10000 --token=<TOKEN> --kubeedge-version=1.15.0
    ```
 4. **Verify the edge node has joined (on Master VM)**:
    ```bash
