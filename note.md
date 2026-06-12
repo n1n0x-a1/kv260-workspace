@@ -485,6 +485,7 @@ flowchart TD
      Verify connectivity by pinging an external domain:
      ```bash
      ping google.com
+     ping master.ninox.com
      ```
      Record the obtained IP address; this is your `<kv260-ip-address>` for Phase 4.
    * Start the SSH daemon manually:
@@ -595,9 +596,9 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
    sudo keadm gettoken --kube-config=$HOME/.kube/config
    ```
 3. **Join Edge Node (on KV260)**:
-   Run `keadm join` with `sudo` on the KV260 to connect the board as a managed KubeEdge node:
+   Run `keadm join` on the KV260 (since Yocto boots directly to root, `sudo` is not needed or available):
    ```bash
-   sudo keadm join --cloudcore-ipport=<MASTER-IP>:10000 --token=<TOKEN> --kubeedge-version=1.15.0
+   keadm join --cloudcore-ipport=master.ninox.com:10000 --token=bed2ef0022c2347599b889a6fe1d2ffc08f233f160c985108fbc4fcda0cb899f.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODEyNTkxNTd9.ex7mkjnTO6MQgowLLIE5Wdz96IXU7kfDniTYBIXy0_g --kubeedge-version=1.15.0
    ```
 4. **Verify the edge node has joined (on Master VM)**:
    ```bash
