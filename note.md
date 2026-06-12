@@ -621,7 +621,7 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
       
       # If missing, download and extract the official ARM64 CNI plugins:
       wget https://github.com/containernetworking/plugins/releases/download/v1.1.1/cni-plugins-linux-arm64-v1.1.1.tgz
-      tar -Cxzvf /opt/cni/bin cni-plugins-linux-arm64-v1.1.1.tgz
+      tar -xzvf cni-plugins-linux-arm64-v1.1.1.tgz -C /opt/cni/bin
       ```
    2. Create a basic bridge configuration file:
       ```bash
