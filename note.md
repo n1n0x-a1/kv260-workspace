@@ -784,13 +784,13 @@ Refer to the [`kubeedge_integration_guide.md`](smartapp-modified/kubeedge_integr
 ##### 5.6: Troubleshooting: Restoring KV260 SSH Access, Native Compilation, and Symlinking
 
 If you are locked out of the KV260 edge node (due to password change/public key restrictions):
-1. **Accessing Host filesystem via container namespace**:
+1. **Accessing Host filesystem via container namespace** (Run on your **Host Laptop** using the socket client, or execute via `kubectl exec` inside the `xmutil-app` pod from the **Master VM**):
    - Because `xmutil-app` runs on the edge node with `privileged: true` and shares the host network (`hostNetwork: true`), it listens on port `8080` for remote commands.
    - We can send a command to mount the host's root device (`/dev/mmcblk1p2`) to a directory inside the container's namespace:
      ```bash
      mkdir -p /host-root && mount /dev/mmcblk1p2 /host-root
      ```
-2. **Restoring Authorized Keys**:
+2. **Restoring Authorized Keys** (Run inside the **`xmutil-app` container** namespace):
    - The root user's home directory in Petalinux/Yocto is `/home/root` (not `/root`).
    - Append your laptop's public key to `/home/root/.ssh/authorized_keys` inside the `/host-root` mount, and set correct permissions:
      ```bash
@@ -799,12 +799,12 @@ If you are locked out of the KV260 edge node (due to password change/public key 
      chmod 700 /host-root/home/root/.ssh
      chmod 600 /host-root/home/root/.ssh/authorized_keys
      ```
-3. **Interactive App Compilation**:
+3. **Interactive App Compilation** (Run inside the **`xmutil-app` container** on the **KV260**):
    - Since standard GCC is installed inside the `xmutil-app` container, you can compile the `smart_model_select` code natively on the ARM64 board by executing:
      ```bash
      gcc -o /opt/xilinx/kv260-vvas-sms/app/smart_model_select /opt/xilinx/kv260-vvas-sms/app/smart_model_select.c -lpthread
      ```
-4. **Linking Deployed Model to VVAS Path**:
+4. **Linking Deployed Model to VVAS Path** (Run directly on the **KV260** host shell via SSH):
    - Ensure you link your deployed xmodel folder to the VVAS models path:
      ```bash
      ln -s /home/petalinux/my_model/my_model /opt/xilinx/kv260-vvas-sms/models.b3136/my_model
