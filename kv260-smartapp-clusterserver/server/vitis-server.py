@@ -8,7 +8,7 @@ import os
 
 phone = socket.socket(socket.AF_INET,socket.SOCK_STREAM) #买手机
 phone.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-phone.bind(('0.0.0.0',82)) #绑定手机卡
+phone.bind(('0.0.0.0',8082)) #绑定手机卡
 phone.listen(5) #阻塞的最大数
 print('start runing.....')
 while True: #链接循环
@@ -23,13 +23,13 @@ while True: #链接循环
         str = cmd.decode('utf-8').split()
         if str[0] == 'scp':
             print('--scp files...')
-            str[-1] = 'petalinux@10.20.0.33:'+str[-1].strip()
+            str[-1] = 'root@192.168.123.112:'+str[-1].strip()
             print(str)
             cmd_scp = "sshpass -p ninox123 "
             for i in str:
                 cmd_scp = cmd_scp + i + ' '
             print(cmd_scp)
-            with Popen(cmd_scp, shell=True, stdout=PIPE, stderr=STDOUT, bufsize=1) as p:
+            with Popen(cmd_scp, shell=True, stdout=PIPE, stderr=STDOUT, bufsize=1, universal_newlines=True) as p:
                 for line in p.stdout:
                     print(line)
                     coon.send(line.encode('utf-8'))
