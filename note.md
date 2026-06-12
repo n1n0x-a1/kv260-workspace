@@ -626,7 +626,7 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
    3. Restart containerd:
       ```bash
       killall containerd
-      containerd &
+      containerd --config /etc/containerd/config.toml &
       ```
    Run `keadm join` on the KV260:
    ```bash
