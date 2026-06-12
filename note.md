@@ -601,6 +601,12 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
    keadm reset
    rm -rf /etc/kubeedge/
    ```
+   *Note: If the command fails with a connection error to `/run/containerd/containerd.sock`, ensure containerd is running:*
+   ```bash
+   systemctl status containerd
+   systemctl start containerd
+   systemctl enable containerd
+   ```
    Run `keadm join` on the KV260:
    ```bash
    keadm join --cloudcore-ipport=<MASTER-IP>:10000 --token=<TOKEN> --kubeedge-version=1.15.0
