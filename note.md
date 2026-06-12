@@ -634,9 +634,8 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
           {
             "type": "bridge",
             "bridge": "cni0",
-            "isGateway": true,
-            "ipMasq": true,
-            "promiscMode": true,
+            "isGateway": false,
+            "ipMasq": false,
             "ipam": {
               "type": "host-local",
               "ranges": [
@@ -646,10 +645,6 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
                 {"dst": "0.0.0.0/0"}
               ]
             }
-          },
-          {
-            "type": "portmap",
-            "capabilities": {"portMappings": true}
           }
         ]
       }
