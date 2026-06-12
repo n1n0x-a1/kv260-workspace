@@ -612,6 +612,19 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
    # OR set it manually close to the current time:
    date -s "2026-06-12 10:00:00"
    ```
+   *Note: If the command fails with `cni plugin not initialized` error, disable CNI in containerd config:*
+   1. Open `/etc/containerd/config.toml` (create it if missing via `containerd config default > /etc/containerd/config.toml`).
+   2. Locate the CNI configuration section and set empty paths to disable it:
+      ```toml
+      [plugins."io.containerd.grpc.v1.cri".cni]
+        bin_dir = ""
+        conf_dir = ""
+      ```
+   3. Restart containerd:
+      ```bash
+      pkill containerd
+      containerd &
+      ```
    Run `keadm join` on the KV260:
    ```bash
    keadm join --cloudcore-ipport=<MASTER-IP>:10000 --token=<TOKEN> --kubeedge-version=1.15.0
