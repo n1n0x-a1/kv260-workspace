@@ -605,6 +605,13 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
    ```bash
    containerd &
    ```
+   *Note: If the command fails with TLS/certificate validation errors, the system clock on the KV260 is outdated (resets to 2018). Sync the clock first:*
+   ```bash
+   # Sync via NTP:
+   ntpd -q -g -p pool.ntp.org
+   # OR set it manually close to the current time:
+   date -s "2026-06-12 10:00:00"
+   ```
    Run `keadm join` on the KV260:
    ```bash
    keadm join --cloudcore-ipport=<MASTER-IP>:10000 --token=<TOKEN> --kubeedge-version=1.15.0
