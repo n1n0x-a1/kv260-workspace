@@ -618,12 +618,11 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
       mkdir -p /etc/containerd
       containerd config default > /etc/containerd/config.toml
       ```
-   2. Open `/etc/containerd/config.toml`, locate the CNI configuration section, and set empty paths to disable it:
-      ```toml
-      [plugins."io.containerd.grpc.v1.cri".cni]
-        bin_dir = ""
-        conf_dir = ""
-      ```
+    2. Disable CNI by updating the paths to empty strings using `sed` in place:
+       ```bash
+       sed -i 's|bin_dir = "/opt/cni/bin"|bin_dir = ""|g' /etc/containerd/config.toml
+       sed -i 's|conf_dir = "/etc/cni/net.d"|conf_dir = ""|g' /etc/containerd/config.toml
+       ```
    3. Restart containerd:
       ```bash
       pkill containerd
