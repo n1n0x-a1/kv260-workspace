@@ -666,9 +666,17 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
       killall containerd
       containerd &
       ```
+   *Note: Since Yocto does not run systemd, we must create a placeholder directory so `keadm` can write the service file without error, and then start `edgecore` manually:*
+   ```bash
+   mkdir -p /etc/systemd/system
+   ```
    Run `keadm join` on the KV260:
    ```bash
    keadm join --cloudcore-ipport=<MASTER-IP>:10000 --token=<TOKEN> --kubeedge-version=1.15.0
+   ```
+   After joining successfully, run the KubeEdge core daemon manually in the background:
+   ```bash
+   edgecore &
    ```
 4. **Verify the edge node has joined (on Master VM)**:
    ```bash
