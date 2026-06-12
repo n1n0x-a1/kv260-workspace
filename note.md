@@ -784,9 +784,24 @@ Refer to the [`kubeedge_integration_guide.md`](smartapp-modified/kubeedge_integr
 ##### 5.6: Troubleshooting: Restoring KV260 SSH Access, Native Compilation, and Symlinking
 
 If you are locked out of the KV260 edge node (due to password change/public key restrictions):
-1. **Accessing Host filesystem via container namespace** (Run on your **Host Laptop** using the socket client, or execute via `kubectl exec` inside the `xmutil-app` pod from the **Master VM**):
-   - Because `xmutil-app` runs on the edge node with `privileged: true` and shares the host network (`hostNetwork: true`), it listens on port `8080` for remote commands.
-   - We can send a command to mount the host's root device (`/dev/mmcblk1p2`) to a directory inside the container's namespace:
+
+To access the `xmutil-app` container:
+- **Option A: From the Master VM** (using `kubectl`):
+  ```bash
+  ssh k8s@master.ninox.com
+  kubectl exec -it xmutil-app-66948c6dd8-k92fk -- /bin/bash
+  ```
+- **Option B: From the KV260 Board directly** (using containerd `ctr`):
+  ```bash
+  ssh root@192.168.123.112
+  # Find container ID via: ctr -n k8s.io containers list
+  # Execute a shell:
+  ctr -n k8s.io tasks exec --exec-id shell-id -t db36c600d4bbb79babc7b2236946a5f11a48c3bf9a9e73bc8bbea05b47bc4a93 /bin/bash
+  ```
+
+1. **Accessing Host filesystem via container namespace** (Run inside the container shell accessed above):
+   - Because `xmutil-app` runs on the edge node with `privileged: true` and shares the host network (`hostNetwork: true`):
+   - We can mount the host's root device (`/dev/mmcblk1p2`) to a directory inside the container's namespace:
      ```bash
      mkdir -p /host-root && mount /dev/mmcblk1p2 /host-root
      ```
