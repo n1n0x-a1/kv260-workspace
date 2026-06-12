@@ -791,6 +791,7 @@ To access the `xmutil-app` container:
   ssh k8s@master.ninox.com
   kubectl exec -it xmutil-app-66948c6dd8-k92fk -- /bin/bash
   ```
+  *Note: If this fails with `connection refused` on port `10350`, KubeEdge's `edgeStream` tunnel is disabled on the board. We have enabled it by editing `/etc/kubeedge/config/edgecore.yaml` (`edgeStream.enable: true`) and restarting `edgecore` on the KV260 via `killall edgecore && nohup /usr/local/bin/edgecore >/var/log/edgecore.log 2>&1 &`.*
 - **Option B: From the KV260 Board directly** (using containerd `ctr`):
   ```bash
   ssh root@192.168.123.112
