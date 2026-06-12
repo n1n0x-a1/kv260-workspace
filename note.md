@@ -613,8 +613,12 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
    date -s "2026-06-12 10:00:00"
    ```
    *Note: If the command fails with `cni plugin not initialized` error, disable CNI in containerd config:*
-   1. Open `/etc/containerd/config.toml` (create it if missing via `containerd config default > /etc/containerd/config.toml`).
-   2. Locate the CNI configuration section and set empty paths to disable it:
+   1. Create the config directory and default configuration (if missing):
+      ```bash
+      mkdir -p /etc/containerd
+      containerd config default > /etc/containerd/config.toml
+      ```
+   2. Open `/etc/containerd/config.toml`, locate the CNI configuration section, and set empty paths to disable it:
       ```toml
       [plugins."io.containerd.grpc.v1.cri".cni]
         bin_dir = ""
