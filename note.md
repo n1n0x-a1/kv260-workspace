@@ -822,9 +822,37 @@ To access the `xmutil-app` container:
      ```
 4. **Linking Deployed Model to VVAS Path** (Run directly on the **KV260** host shell via SSH):
    - Ensure you link your deployed xmodel folder to the VVAS models path:
-     ```bash
-     ln -s /home/petalinux/my_model/my_model /opt/xilinx/kv260-vvas-sms/models.b3136/my_model
-     ```
+      ```bash
+      ln -s /home/petalinux/my_model/my_model /opt/xilinx/kv260-vvas-sms/models.b3136/my_model
+      ```
+
+5. **Running GStreamer Video Inference Pipeline inside the Container**:
+   - **Host Limitations**: Standard GStreamer (`gst-launch-1.0`), VVAS plugins, and display configuration tools (`modetest`) are strictly available inside the `xmutil-app` container, not on the bare Petalinux host. Sourcing `setup.sh` and running `smart_model_select` on the bare host will fail with `command not found` errors.
+   - **Display Pipeline Configuration (`setup.sh`)**: The default `setup.sh` has hardcoded display/KMS IDs that don't match the KV260 board resources. Running it outputs `failed to configure video mode` or `Object not found`. Probing with `modetest -M xlnx` inside the container reveals the correct system parameters:
+     - Connector ID: `45` (DP-1 connected)
+     - CRTC ID: `43`
+     - Planes: `41` (Primary, alpha property `32` / `alpha`) and `39` (Overlay)
+     We have modified `setup.sh` to use these correct IDs.
+   - **Headless/Monitorless Verification**:
+     - When starting, `smart_model_select` launches a background thread to render the welcome screen `welcome.cfg`. If no monitor is connected, `kmssink` fails to configure the video mode, resulting in `negotiation problem` errors.
+     - We resolved this by changing `welcome.cfg` to use `fakesink` instead of `kmssink`.
+     - To run model inference without a physical monitor, select option **`2` (fakesink)** for the output sink (e.g., `1,1,2,0`).
+   - **Deploying & Executing Custom Models**:
+     - Since model indexes in `smart_model_select` are hardcoded to map to specific names (e.g., `1` = `resnet50_pt`), you can override `resnet50_pt` to point to your custom model.
+     - Back up the original directory on the KV260 host:
+       ```bash
+       mv /opt/xilinx/kv260-vvas-sms/models.b3136/resnet50_pt /opt/xilinx/kv260-vvas-sms/models.b3136/resnet50_pt_backup
+       ```
+     - Symlink the resnet directory to your custom model:
+       ```bash
+       ln -s /home/petalinux/my_model/my_model /opt/xilinx/kv260-vvas-sms/models.b3136/resnet50_pt
+       ```
+     - Inside `/home/petalinux/my_model/my_model`, create symlinks for resnet to your custom model files:
+       ```bash
+       ln -s my_model.xmodel /home/petalinux/my_model/my_model/resnet50_pt.xmodel
+       ln -s my_model.prototxt /home/petalinux/my_model/my_model/resnet50_pt.prototxt
+       ```
+     - Run `./smart_model_select` inside the container, choose option `1,1,2,0` (which uses your custom model under index `1` and outputs to `fakesink`), and verify that the pipeline starts, prerolls, and transitions to the `PLAYING` state successfully.
 
 ---
 
