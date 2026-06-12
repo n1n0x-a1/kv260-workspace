@@ -34,7 +34,7 @@ def recieve_signal(con, queue):
 
 phone = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 phone.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-phone.bind(('0.0.0.0',31219))
+phone.bind(('0.0.0.0',8084))
 phone.listen(5)
 print('start runing.....')
 my_env = os.environ.copy()

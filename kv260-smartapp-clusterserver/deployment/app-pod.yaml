@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: camera-app
 spec:
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       name: camera-app-backend
@@ -16,7 +18,7 @@ spec:
         node-role.kubernetes.io/edge: ""
       containers:
         - name: camera-app
-          image: chriskewis/kv260-camera-app
+          image: chriskewis/kv260-xmutil
           imagePullPolicy: IfNotPresent
           securityContext:
             privileged: true

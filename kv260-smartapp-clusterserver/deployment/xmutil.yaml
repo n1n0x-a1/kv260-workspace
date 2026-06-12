@@ -5,6 +5,8 @@ kind: Deployment
 metadata:
   name: xmutil-app
 spec:
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       name: xmutil-backend
@@ -13,6 +15,7 @@ spec:
       labels:
         name: xmutil-backend
     spec:
+      hostNetwork: true
       containers:
         - name: xmutil
           image: chriskewis/kv260-xmutil
@@ -22,7 +25,7 @@ spec:
           resources:
           command: ["python3", "/home/xmutil/xmutil-server.py"]
           ports:
-            - containerPort: 80
+            - containerPort: 8080
           volumeMounts:
           - mountPath: /home/xmutil
             name: xmutil
@@ -34,6 +37,10 @@ spec:
             name: sys-fs
           - mountPath: /config
             name: config-fs
+          - mountPath: /lib/firmware
+            name: firmware
+          - mountPath: /usr/lib/libdfx.so.1.0
+            name: libdfx
       volumes:
       - name: video
         hostPath:
@@ -55,6 +62,14 @@ spec:
         hostPath:
           path: /config
           type: Directory
+      - name: firmware
+        hostPath:
+          path: /lib/firmware
+          type: Directory
+      - name: libdfx
+        hostPath:
+          path: /usr/lib/libdfx.so.1.0
+          type: File
       nodeSelector:
         node-role.kubernetes.io/edge: ""
 ---

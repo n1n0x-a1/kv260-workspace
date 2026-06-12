@@ -3,9 +3,22 @@ import socket
 import subprocess
 import struct
 import json
+import os
+
+# Start the DFX Manager daemon if not already running
+# (required for xmutil loadapp/listapps to work)
+# The config file warning is non-fatal; the socket is still created.
+if not os.path.exists('/tmp/dfx-mgrd.socket'):
+    subprocess.Popen(
+        ['/usr/bin/dfx-mgrd'],
+        stdout=open('/tmp/dfx-mgrd.log', 'w'),
+        stderr=subprocess.STDOUT
+    )
+    import time; time.sleep(2)
+
 phone = socket.socket(socket.AF_INET,socket.SOCK_STREAM) #买手机
 phone.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-phone.bind(('0.0.0.0',80)) #绑定手机卡
+phone.bind(('0.0.0.0',8080)) #绑定手机卡
 phone.listen(5) #阻塞的最大数
 print('start runing.....')
 while True: #链接循环

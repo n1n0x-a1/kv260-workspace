@@ -4,6 +4,8 @@ kind: Deployment
 metadata:
   name: vitis
 spec:
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       name: vitis-backend
@@ -12,13 +14,14 @@ spec:
       labels:
         name: vitis-backend
     spec:
+      hostNetwork: true
       containers:
         - name: backend
           image: pm3h/x-vitis-ai:2.5.4
           imagePullPolicy: Always
           command: ["python3","/home/server/vitis-server.py"]
           ports:
-            - containerPort: 82
+            - containerPort: 8082
           volumeMounts:
           - mountPath: /dev/shm
             name: shm
@@ -58,7 +61,7 @@ spec:
           path: /home/k8s/vitis-server.py
           type: File
       nodeSelector:
-        kubernetes.io/hostname: master-1.ninox.com
+        kubernetes.io/hostname: master
       tolerations:
         - key: node-role.kubernetes.io/control-plane
           effect: NoSchedule

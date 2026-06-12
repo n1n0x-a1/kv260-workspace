@@ -24,12 +24,12 @@ func NewAppCommand() *AppCommand {
 
 func (g *Subcommand) ConfigureApp() {
 	fmt.Println("This is configure env")
-	tcp_client("10.1.2.147:8084", "source /opt/xilinx/kv260-vvas-sms/app/setup.sh")
+	tcp_client(AppAddr(), ". /opt/xilinx/kv260-vvas-sms/app/setup.sh")
 }
 
 func (g *Subcommand) RunApp(file string) {
 	// send xmutil loadapp <bitstream>
 	fmt.Println("This will run app")
 	cmd := "stdbuf -oL " + file
-	tcp_client("10.1.2.147:8084", cmd)
+	tcp_client(AppAddr(), cmd)
 }

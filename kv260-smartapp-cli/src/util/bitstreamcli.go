@@ -25,17 +25,17 @@ func NewBitstreamCommand() *BitstreamCommand {
 
 func (g *Subcommand) ListBitstream() {
 	fmt.Println("This is the bitstream list")
-	tcp_client("10.1.2.147:8080", "xmutil listapps")
+	tcp_client(XmutilAddr(), "xmutil listapps")
 }
 
 func (g *Subcommand) UnloadBitream() {
 	fmt.Println("This will unload bitstream ... ")
-	tcp_client("10.1.2.147:8080", "xmutil unloadapp")
+	tcp_client(XmutilAddr(), "xmutil unloadapp")
 }
 
 func (g *Subcommand) LoadBitstream(file string) {
 	// send xmutil loadapp <bitstream>
 	fmt.Println("This will load bitstream")
 	cmd := "xmutil loadapp " + file
-	tcp_client("10.1.2.147:8080", cmd)
+	tcp_client(XmutilAddr(), cmd)
 }

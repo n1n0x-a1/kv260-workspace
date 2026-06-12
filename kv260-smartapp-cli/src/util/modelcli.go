@@ -66,12 +66,12 @@ func (g *Subcommand) QuantizedModel(model_name string, data_dir string, model_di
 
 	fmt.Println("Beginning generate quantize model...")
 	quant_command := fmt.Sprintf("python -u /home/workspace/src/Vitis-AI-Quantizer/vai_q_pytorch/example/resnet18_quant.py --quant_mode calib --data_dir  %s --model_dir %s --model_name %s", data_dir, model_dir, model_name)
-	tcp_client("10.1.2.147:8082", quant_command)
+	tcp_client(VitisAddr(), quant_command)
 	fmt.Println("Finished quantizing")
 
 	fmt.Println("Beginning generate xmodel and onnx...")
 	deploy_command := fmt.Sprintf("python /home/workspace/src/Vitis-AI-Quantizer/vai_q_pytorch/example/resnet18_quant.py --quant_mode test --model_dir %s --data_dir %s --subset_len 1 --batch_size 1 --deploy", model_dir, data_dir)
-	tcp_client("10.1.2.147:8082", deploy_command)
+	tcp_client(VitisAddr(), deploy_command)
 	fmt.Println("xmodel and onnx generated")
 	return nil
 }
@@ -87,7 +87,7 @@ func (g *Subcommand) CompileModel(xmodel_path string, arch_path string, out_dir 
 
 	compile_command := fmt.Sprintf("vai_c_xir -x %s -a %s -o %s -n %s", xmodel_path, arch_path, out_dir, out_model)
 
-	tcp_client("10.1.2.147:8082", compile_command)
+	tcp_client(VitisAddr(), compile_command)
 
 	return nil
 }
@@ -108,12 +108,12 @@ func (g *Subcommand) DeployModel(dirname string, modelname string) error {
 	cp_md5sum := fmt.Sprintf("cp %s/md5sum.txt %s", dirname, modelname)
 	cp_proto := fmt.Sprintf("cp %s/*.prototxt %s", dirname, modelname)
 
-	tcp_client("10.1.2.147:8082", rm)
-	tcp_client("10.1.2.147:8082", mkdir)
-	tcp_client("10.1.2.147:8082", cp_xmodel)
-	tcp_client("10.1.2.147:8082", cp_meta)
-	tcp_client("10.1.2.147:8082", cp_md5sum)
-	tcp_client("10.1.2.147:8082", cp_proto)
+	tcp_client(VitisAddr(), rm)
+	tcp_client(VitisAddr(), mkdir)
+	tcp_client(VitisAddr(), cp_xmodel)
+	tcp_client(VitisAddr(), cp_meta)
+	tcp_client(VitisAddr(), cp_md5sum)
+	tcp_client(VitisAddr(), cp_proto)
 ////////////////////////////////////////////////////////////////////////////////////////
 	fmt.Println("Deploying to kv260 ...")
         deploy_model := fmt.Sprintf("scp -r /home/workspace/%s /home/petalinux/%s", modelname, modelname)
@@ -123,7 +123,7 @@ func (g *Subcommand) DeployModel(dirname string, modelname string) error {
 //	to use rsync, we need to have it installed in both two sides (kv260 don't have)
 //	tcp_client("10.1.2.147:8082", rsync_model)
 
-	tcp_client("10.1.2.147:8082", deploy_model)
+	tcp_client(VitisAddr(), deploy_model)
 
 	fmt.Println("Processes complete.")
 
