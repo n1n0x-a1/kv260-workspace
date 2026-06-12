@@ -781,6 +781,35 @@ Refer to [`testlines.md`](smartapp-modified/testlines.md) for pre-defined test c
 Instead of executing commands manually via sockets and the Go CLI, KubeEdge supports native, declarative hardware management using Device Twins (CRDs) over MQTT.
 Refer to the [`kubeedge_integration_guide.md`](smartapp-modified/kubeedge_integration_guide.md) for instructions on defining `DeviceModel`/`DeviceInstance` custom resources, launching the Python MQTT mapper on the board to program the FPGA overlays, and patching twin states natively using `kubectl patch`.
 
+##### 5.6: Troubleshooting: Restoring KV260 SSH Access, Native Compilation, and Symlinking
+
+If you are locked out of the KV260 edge node (due to password change/public key restrictions):
+1. **Accessing Host filesystem via container namespace**:
+   - Because `xmutil-app` runs on the edge node with `privileged: true` and shares the host network (`hostNetwork: true`), it listens on port `8080` for remote commands.
+   - We can send a command to mount the host's root device (`/dev/mmcblk1p2`) to a directory inside the container's namespace:
+     ```bash
+     mkdir -p /host-root && mount /dev/mmcblk1p2 /host-root
+     ```
+2. **Restoring Authorized Keys**:
+   - The root user's home directory in Petalinux/Yocto is `/home/root` (not `/root`).
+   - Append your laptop's public key to `/home/root/.ssh/authorized_keys` inside the `/host-root` mount, and set correct permissions:
+     ```bash
+     mkdir -p /host-root/home/root/.ssh
+     echo "YOUR_PUBLIC_KEY" >> /host-root/home/root/.ssh/authorized_keys
+     chmod 700 /host-root/home/root/.ssh
+     chmod 600 /host-root/home/root/.ssh/authorized_keys
+     ```
+3. **Interactive App Compilation**:
+   - Since standard GCC is installed inside the `xmutil-app` container, you can compile the `smart_model_select` code natively on the ARM64 board by executing:
+     ```bash
+     gcc -o /opt/xilinx/kv260-vvas-sms/app/smart_model_select /opt/xilinx/kv260-vvas-sms/app/smart_model_select.c -lpthread
+     ```
+4. **Linking Deployed Model to VVAS Path**:
+   - Ensure you link your deployed xmodel folder to the VVAS models path:
+     ```bash
+     ln -s /home/petalinux/my_model/my_model /opt/xilinx/kv260-vvas-sms/models.b3136/my_model
+     ```
+
 ---
 
 > 📋 **Session 3 — End-to-End CLI Operationalization log** has been moved to [k8s_network_architecture.md](k8s_network_architecture.md#session-3--end-to-end-cli-operationalization-2026-06-12).
