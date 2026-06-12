@@ -585,118 +585,135 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
 > **Nginx Ingress is optional.** The current deployment uses direct `ClusterIP` service access (via `kubectl port-forward` or node IP) and `hostNetwork: true` for the camera app — no nginx is required.
 
 1. **Initialize CloudCore (on Master VM)**:
-   Ensure Kubernetes is running on your Master Node. Get the Master VM's IP by running `kubectl get nodes -o wide` (look for the `INTERNAL-IP` of the master node, which is `192.168.123.210` in the Ninox infrastructure) or run `ip route get 1.1.1.1 | awk '{print $7}'` directly on the master shell.
+   Ensure Kubernetes is running on your Master Node. Get the Master VM's IP by running `kubectl get nodes -o wide` (look for the `INTERNAL-IP` of the master node, which is `192.168.123.210` in the Ninox infrastructure).
    
-   Run `keadm init` with `sudo` to download and launch the KubeEdge control plane (`cloudcore`), pointing it to your local kubeconfig:
+   Run `keadm init` to deploy the KubeEdge control plane (`cloudcore`):
    ```bash
    sudo keadm init --advertise-address=<MASTER-IP> --profile version=1.15.0 --kube-config=$HOME/.kube/config
    ```
+   
+   *Note: Because the master node has a NoSchedule taint by default, the scheduler will schedule the `cloudcore` pod on a worker node. You MUST immediately patch the deployment to tolerate the control-plane taint and force it to run directly on the master node so that port 10000 is open on the master VM (`192.168.123.210`):*
+   ```bash
+   sudo kubectl patch deployment cloudcore -n kubeedge -p '{"spec":{"template":{"spec":{"nodeName":"master","tolerations":[{"key":"node-role.kubernetes.io/control-plane","operator":"Exists","effect":"NoSchedule"}]}}}}'
+   ```
+
+   *Verify ConfigMap SANs:* Ensure the certificate SANs are correctly configured. Under the `cloudcore` ConfigMap (`kubectl edit cm cloudcore -n kubeedge`), ensure the `advertiseAddress` under `modules.cloudHub` lists the master IP and DNS properly without mixing domain names in the IP list or having empty strings:
+   ```yaml
+   modules:
+     cloudHub:
+       advertiseAddress:
+       - 192.168.123.210
+       dnsNames:
+       - master.ninox.com
+   ```
+   If any ConfigMap changes are made, regenerate the certificates:
+   ```bash
+   kubectl delete secret casecret cloudcoresecret -n kubeedge
+   kubectl delete pod -n kubeedge -l kubeedge=cloudcore
+   ```
+
 2. **Retrieve Node Join Token (on Master VM)**:
    ```bash
    sudo keadm gettoken --kube-config=$HOME/.kube/config
    ```
 3. **Join Edge Node (on KV260)**:
-   *Note: If the command fails because `/etc/kubeedge/` is not clean, reset and delete it first:*
+   Run the following unified setup command block to fully configure the Yocto host environment (cleans directories, mounts cgroups, syncs system time, installs/configures CNI plugins, restarts containerd, and creates systemd placeholder directories):
    ```bash
-   keadm reset
+   # 1. Reset KubeEdge & clean config
+   keadm reset --force || true
    rm -rf /etc/kubeedge/
-   ```
-   *Note: If the command fails with a connection error to `/run/containerd/containerd.sock`, ensure containerd is running in the background:*
-   ```bash
-   containerd &
-   ```
-   *Note: If the command fails with `no cgroup mount found in mountinfo` error, manually mount cgroups and restart containerd:*
-   ```bash
+
+   # 2. Mount cgroups (Yocto environment)
    mkdir -p /sys/fs/cgroup
-   mount -t tmpfs -o uid=0,gid=0,mode=0755 cgroup /sys/fs/cgroup
+   mount -t tmpfs -o uid=0,gid=0,mode=0755 cgroup /sys/fs/cgroup 2>/dev/null || true
    for sys in $(awk '!/^#/ { if ($4 == 1) print $1 }' /proc/cgroups); do
      mkdir -p /sys/fs/cgroup/$sys
-     mount -t cgroup -o $sys cgroup /sys/fs/cgroup/$sys
+     mount -t cgroup -o $sys cgroup /sys/fs/cgroup/$sys 2>/dev/null || true
    done
-   killall containerd
+
+   # 3. Sync time to prevent TLS handshake failures
+   ntpd -q -g -p pool.ntp.org || date -s "2026-06-12 10:30:00"
+
+   # 4. Install & configure CNI plugins (ARM64)
+   mkdir -p /opt/cni/bin
+   cp -r /usr/lib/cni/* /opt/cni/bin/ 2>/dev/null || true
+   cp -r /usr/libexec/cni/* /opt/cni/bin/ 2>/dev/null || true
+   if [ ! -f /opt/cni/bin/bridge ]; then
+     wget https://github.com/containernetworking/plugins/releases/download/v1.1.1/cni-plugins-linux-arm64-v1.1.1.tgz
+     tar -xzvf cni-plugins-linux-arm64-v1.1.1.tgz -C /opt/cni/bin
+   fi
+
+   mkdir -p /etc/cni/net.d
+   cat >/etc/cni/net.d/10-containerd-net.conflist <<EOF
+   {
+     "cniVersion": "1.0.0",
+     "name": "containerd-net",
+     "plugins": [
+       {
+         "type": "bridge",
+         "bridge": "cni0",
+         "isGateway": false,
+         "ipMasq": false,
+         "ipam": {
+           "type": "host-local",
+           "ranges": [
+             [{"subnet": "10.88.0.0/16"}]
+           ],
+           "routes": [
+             {"dst": "0.0.0.0/0"}
+           ]
+         }
+       }
+     ]
+   }
+   EOF
+
+   # 5. Restart containerd to apply CNI & cgroup mounts
+   killall containerd 2>/dev/null || true
+   sleep 1
    containerd &
-   ```
-   *Note: If the command fails with TLS/certificate validation errors, the system clock on the KV260 is outdated (resets to 2018). Sync the clock first:*
-   ```bash
-   # Sync via NTP:
-   ntpd -q -g -p pool.ntp.org
-   # OR set it manually close to the current time:
-   date -s "2026-06-12 10:00:00"
-   *Note: If the command fails with `cni plugin not initialized` error, configure and install CNI on the edge node:*
-   1. Install the CNI plugins (ARM64 for KV260):
-      ```bash
-      mkdir -p /opt/cni/bin
-      # Try copying from Yocto system folders if present:
-      cp -r /usr/lib/cni/* /opt/cni/bin/ 2>/dev/null
-      cp -r /usr/libexec/cni/* /opt/cni/bin/ 2>/dev/null
-      
-      # If missing, download and extract the official ARM64 CNI plugins:
-      wget https://github.com/containernetworking/plugins/releases/download/v1.1.1/cni-plugins-linux-arm64-v1.1.1.tgz
-      tar -xzvf cni-plugins-linux-arm64-v1.1.1.tgz -C /opt/cni/bin
-      ```
-   2. Create a basic bridge configuration file:
-      ```bash
-      mkdir -p /etc/cni/net.d
-      cat >/etc/cni/net.d/10-containerd-net.conflist <<EOF
-      {
-        "cniVersion": "1.0.0",
-        "name": "containerd-net",
-        "plugins": [
-          {
-            "type": "bridge",
-            "bridge": "cni0",
-            "isGateway": false,
-            "ipMasq": false,
-            "ipam": {
-              "type": "host-local",
-              "ranges": [
-                [{"subnet": "10.88.0.0/16"}]
-              ],
-              "routes": [
-                {"dst": "0.0.0.0/0"}
-              ]
-            }
-          }
-        ]
-      }
-      EOF
-      ```
-   3. Restart containerd:
-      ```bash
-      killall containerd
-      containerd &
-      ```
-   *Note: Since Yocto does not run systemd, we must create a placeholder directory so `keadm` can write the service file without error, and then start `edgecore` manually:*
-   ```bash
+   sleep 2
+
+   # 6. Create systemd configuration placeholder directory
    mkdir -p /etc/systemd/system
    ```
    Run `keadm join` on the KV260:
    ```bash
    keadm join --cloudcore-ipport=<MASTER-IP>:10000 --token=<TOKEN> --kubeedge-version=1.15.0
    ```
-   After joining successfully, run the KubeEdge core daemon manually in the background:
+   *Note: On Yocto (non-systemd), the `keadm join` command may hang at the end while trying to start/check the systemd service. If it hangs for more than 10-15 seconds, press `Ctrl+C` to interrupt the command. The configuration files and certificates have already been generated at this point.*
+
+   Configure MQTT to use the internal broker to prevent continuous connection errors on the default port:
+   ```bash
+   sed -i 's/mqttMode: 2/mqttMode: 0/g' /etc/kubeedge/config/edgecore.yaml
+   ```
+
+   Start the KubeEdge core daemon manually in the background:
    ```bash
    edgecore &
    ```
+   *Note: In the edgecore logs, you may see recurrent warnings/errors like `Failed to get the info of the filesystem with mountpoint` or `Failed to get system UUID`. These are due to cAdvisor's inability to query Yocto's root filesystem stats and the absence of a machine-id file. They are completely harmless and can be safely ignored (the node will still register as STATUS=Ready and execute containers normally).*
 4. **Verify the edge node has joined (on Master VM)**:
    ```bash
    kubectl get nodes
    # The KV260 should appear with STATUS=Ready
    ```
 5. **Label the Edge Node (on Master VM)**:
-   Label the newly joined KV260 node so that targeted KubeEdge workloads are correctly scheduled on it:
+   Label the newly joined KV260 node so that targeted KubeEdge workloads are correctly scheduled on it (in this case, the name is `zynqmp-generic`):
    ```bash
-   kubectl label node <kv260-node-name> node-role.kubernetes.io/edge=""
+   kubectl label node zynqmp-generic node-role.kubernetes.io/edge="" --overwrite
    ```
+   *Note: KubeEdge usually applies the `node-role.kubernetes.io/edge=""` label automatically when the node joins the cluster.*
 
 ##### 5.2: Staging Server Scripts and Host Directory Setup
 Before deploying the pods, we must copy the backend socket server scripts to their target destinations and prepare the environment directories.
 
 **On the Master VM (Vitis-AI compiler backend)**:
-1. **From your host laptop**, copy the `need/` folder to the Master VM:
+1. **From your host laptop** (`syvesdh@ninoxsyve`), copy the `need/` folder to the Master VM (`k8s@master.ninox.com`):
    ```bash
-   scp -r smartapp-modified/kv260-smartapp-clusterserver/need <vm-user>@<vm-node>:~/
-   scp smartapp-modified/kv260-smartapp-clusterserver/server/vitis-server.py <vm-user>@<vm-node>:~/
+   # Run these commands locally from your host laptop (syvesdh@ninoxsyve)
+   scp -r smartapp-modified/kv260-smartapp-clusterserver/need k8s@master.ninox.com:~/
+   scp smartapp-modified/kv260-smartapp-clusterserver/server/vitis-server.py k8s@master.ninox.com:~/
    ```
 2. **SSH into the Master VM**, then stage dependencies into the Vitis-AI host directory:
    ```bash
@@ -743,6 +760,14 @@ kubectl apply -f smartapp-modified/kv260-smartapp-clusterserver/deployment/app-p
 ```
 *(Ensure these pods run as `privileged: true` with `/sys`, `/config`, and `/dev` mounted to allow direct hardware interaction with the DPU and overlays).*
 
+Verify that the workloads have transitioned to `Running` status (on Master VM):
+```bash
+# Monitor the pod startup progress
+kubectl get pods -o wide --watch
+```
+*Note: Due to the large size of the Vitis-AI and KV260 hardware daemon images, the pods will remain in `ContainerCreating` for several minutes while downloading. They are fully ready when `STATUS` becomes `Running` and `READY` is `1/1`.*
+
+
 ##### 5.4: Command Line Interface (`ninoctl`) and Remote Execution
 Build and run the `ninoctl` client inside its container to trigger remote quantization, compilation, and deployment commands:
 ```bash
@@ -755,3 +780,7 @@ Refer to [`testlines.md`](smartapp-modified/testlines.md) for pre-defined test c
 ##### 5.5: Native State Orchestration via Device Twins (Alternative/Upgrade)
 Instead of executing commands manually via sockets and the Go CLI, KubeEdge supports native, declarative hardware management using Device Twins (CRDs) over MQTT.
 Refer to the [`kubeedge_integration_guide.md`](smartapp-modified/kubeedge_integration_guide.md) for instructions on defining `DeviceModel`/`DeviceInstance` custom resources, launching the Python MQTT mapper on the board to program the FPGA overlays, and patching twin states natively using `kubectl patch`.
+
+---
+
+> 📋 **Session 3 — End-to-End CLI Operationalization log** has been moved to [k8s_network_architecture.md](k8s_network_architecture.md#session-3--end-to-end-cli-operationalization-2026-06-12).

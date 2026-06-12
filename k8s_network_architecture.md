@@ -107,3 +107,112 @@ flowchart TB
     3. Transfers models and requests the **Xmutil Pod** via `kv260-xmutil.ninox.com` (Edge) to load the corresponding hardware bitstream overlay.
     4. Requests the **Camera App Pod** via port `8084` (Edge) to launch/restart the application with the newly compiled model target.
 
+---
+
+## Session 3 — End-to-End CLI Operationalization (2026-06-12)
+
+### Goals
+- Fix all TCP socket port mismatches across `vitis-server.py`, `xmutil-server.py`, and `app-server.py`.
+- Switch all three deployments to `hostNetwork: true` so the CLI can connect directly to the node IPs without ClusterIP DNS.
+- Build and validate the `ninoctl` CLI binary.
+- Verify full end-to-end socket communication from the developer machine → sockets on master / KV260.
+
+### 1. Port Alignment
+
+The original server scripts bound to internal container ports (`82`, `80`, `31219`) that did not match what the Go CLI expected at the host level. The fix was:
+
+| Service | Script | Old Port | New Port | Host |
+|---------|--------|----------|----------|------|
+| `vitis-server.py` | `/home/k8s/vitis-server.py` on master | 82 | **8082** | `192.168.123.210` (master) |
+| `xmutil-server.py` | `/home/petalinux/xmutil-server.py` on KV260 | 80 | **8080** | `192.168.123.112` (zynqmp-generic) |
+| `app-server.py` | `/opt/xilinx/kv260-vvas-sms/app/app-server.py` on KV260 | 31219 | **8084** | `192.168.123.112` (zynqmp-generic) |
+
+### 2. `hostNetwork: true` for All Deployments
+
+All three deployments (`vitis`, `xmutil-app`, `camera-app`) were updated to use `hostNetwork: true` in their pod specs so the socket servers bind directly to the node's IP. `strategy: Recreate` was also added to avoid host-port scheduling conflicts during rolling updates.
+
+Files updated:
+- `smartapp-modified/kv260-smartapp-clusterserver/deployment/vitis-ai.yaml`
+- `smartapp-modified/kv260-smartapp-clusterserver/deployment/xmutil.yaml`
+- `smartapp-modified/kv260-smartapp-clusterserver/deployment/app-pod.yaml`
+
+### 3. `dfx-mgrd` Autostart in `xmutil-server.py`
+
+`xmutil` commands (e.g., `listapps`, `loadapp`) require the FPGA DFX Manager daemon (`dfx-mgrd`) to be running. Since this daemon lives inside the container image but not on the Yocto host, `xmutil-server.py` was updated to auto-start it on launch:
+
+```python
+if not os.path.exists('/tmp/dfx-mgrd.socket'):
+    subprocess.Popen(
+        ['/usr/bin/dfx-mgrd'],
+        stdout=open('/tmp/dfx-mgrd.log', 'w'),
+        stderr=subprocess.STDOUT
+    )
+    import time; time.sleep(2)
+```
+
+The config file warning (`Cannot open /etc/dfx-mgrd/daemon.conf`) is non-fatal — the socket is still created and `xmutil` works.
+
+### 4. CLI Config Centralization
+
+The `ninoctl` Go CLI had all three service IPs hardcoded as `10.1.2.147` (a stale address). A new `config.go` was added to the `util` package:
+
+```
+smartapp-modified/kv260-smartapp-cli/src/util/config.go
+```
+
+All endpoints are now overridable via environment variables:
+- `NINOCTL_XMUTIL_ADDR` (default: `192.168.123.112:8080`)
+- `NINOCTL_VITIS_ADDR`  (default: `192.168.123.210:8082`)
+- `NINOCTL_APP_ADDR`    (default: `192.168.123.112:8084`)
+
+### 5. CLI Build
+
+Built using a temporary Kubernetes Job running `golang:1.21` on the master node (no local Go installation required):
+
+```bash
+# Source was rsynced to /tmp/ninoctl-src on master, then:
+kubectl apply -f - <<EOF
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: build-ninoctl
+spec:
+  template:
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: master
+      ...
+      containers:
+        - image: golang:1.21
+          command: ["go", "build", "-o", "/output/ninoctl", "."]
+EOF
+
+# Copy binary back:
+scp k8s@master.ninox.com:/tmp/ninoctl-output/ninoctl smartapp-modified/kv260-smartapp-cli/ninoctl
+```
+
+Binary is at: `smartapp-modified/kv260-smartapp-cli/ninoctl`
+
+### 6. Verification Results
+
+```bash
+# List bitstreams (xmutil via socket to KV260:8080) — SUCCESS
+$ ninoctl bitstream -list
+This is the bitstream list
+                     Accelerator          Accel_type  ...  Active_slot
+# (empty — no bitstream loaded yet, which is expected)
+
+# Configure app environment (app-server via socket to KV260:8084) — REACHED
+$ ninoctl app -configure
+This is configure env
+/bin/sh: 1: source: not found
+# (source is bash-only; the app-server runs commands via /bin/sh. Fixable by using '.' instead of 'source')
+```
+
+### 7. Known Remaining Issues
+
+| Status | Issue | Impact | Fix |
+|--------|-------|--------|-----|
+| ✅ Fixed | `app -configure` uses `source` | Fails in `/bin/sh` on Yocto | Changed to `.` (dot) operator in `appcli.go`; rebuilt `ninoctl` |
+| ✅ Fixed | No bitstreams loaded | No FPGA overlays active | Compiled `kv260-vvas-sms.dtbo` on host, added host mounts for `/lib/firmware` and `/usr/lib/libdfx.so.1.0` in `xmutil.yaml` |
+| ✅ Fixed | `vitis-server.py` deploys model via `scp` to `petalinux@10.20.0.33` | Hardcoded KV260 management IP | Updated to `192.168.123.112` on master VM; vitis pod restarted |
