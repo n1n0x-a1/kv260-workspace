@@ -601,10 +601,8 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
    keadm reset
    rm -rf /etc/kubeedge/
    ```
-   *Note: If the command fails with a connection error to `/run/containerd/containerd.sock`, ensure containerd is running. Since the KV260 Yocto image uses SysV init, use the init script or run in background:*
+   *Note: If the command fails with a connection error to `/run/containerd/containerd.sock`, ensure containerd is running in the background:*
    ```bash
-   /etc/init.d/containerd start
-   # Or if the init script is missing, launch the daemon manually in the background:
    containerd &
    ```
    Run `keadm join` on the KV260:
