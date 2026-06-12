@@ -611,22 +611,54 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
    ntpd -q -g -p pool.ntp.org
    # OR set it manually close to the current time:
    date -s "2026-06-12 10:00:00"
-   ```
-   *Note: If the command fails with `cni plugin not initialized` error, disable CNI in containerd config:*
-   1. Create the config directory and default configuration (if missing):
+   *Note: If the command fails with `cni plugin not initialized` error, configure and install CNI on the edge node:*
+   1. Install the CNI plugins (ARM64 for KV260):
       ```bash
-      mkdir -p /etc/containerd
-      containerd config default > /etc/containerd/config.toml
+      mkdir -p /opt/cni/bin
+      # Try copying from Yocto system folders if present:
+      cp -r /usr/lib/cni/* /opt/cni/bin/ 2>/dev/null
+      cp -r /usr/libexec/cni/* /opt/cni/bin/ 2>/dev/null
+      
+      # If missing, download and extract the official ARM64 CNI plugins:
+      wget https://github.com/containernetworking/plugins/releases/download/v1.1.1/cni-plugins-linux-arm64-v1.1.1.tgz
+      tar -Cxzvf /opt/cni/bin cni-plugins-linux-arm64-v1.1.1.tgz
       ```
-    2. Disable CNI by updating the paths to empty strings using `sed` in place:
-       ```bash
-       sed -i 's|bin_dir = "/opt/cni/bin"|bin_dir = ""|g' /etc/containerd/config.toml
-       sed -i 's|conf_dir = "/etc/cni/net.d"|conf_dir = ""|g' /etc/containerd/config.toml
-       ```
+   2. Create a basic bridge configuration file:
+      ```bash
+      mkdir -p /etc/cni/net.d
+      cat >/etc/cni/net.d/10-containerd-net.conflist <<EOF
+      {
+        "cniVersion": "1.0.0",
+        "name": "containerd-net",
+        "plugins": [
+          {
+            "type": "bridge",
+            "bridge": "cni0",
+            "isGateway": true,
+            "ipMasq": true,
+            "promiscMode": true,
+            "ipam": {
+              "type": "host-local",
+              "ranges": [
+                [{"subnet": "10.88.0.0/16"}]
+              ],
+              "routes": [
+                {"dst": "0.0.0.0/0"}
+              ]
+            }
+          },
+          {
+            "type": "portmap",
+            "capabilities": {"portMappings": true}
+          }
+        ]
+      }
+      EOF
+      ```
    3. Restart containerd:
       ```bash
       killall containerd
-      containerd --config /etc/containerd/config.toml &
+      containerd &
       ```
    Run `keadm join` on the KV260:
    ```bash
