@@ -625,7 +625,7 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
        ```
    3. Restart containerd:
       ```bash
-      pkill containerd
+      killall containerd
       containerd &
       ```
    Run `keadm join` on the KV260:
