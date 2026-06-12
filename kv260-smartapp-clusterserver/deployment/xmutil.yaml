@@ -17,8 +17,10 @@ spec:
         - name: xmutil
           image: chriskewis/kv260-xmutil
           imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
           resources:
-          command: ["python3", "/home/xmutil/xmutil-server.py"] #["/bin/bash", "-ce", "tail -f /dev/null"]
+          command: ["python3", "/home/xmutil/xmutil-server.py"]
           ports:
             - containerPort: 80
           volumeMounts:
@@ -28,6 +30,10 @@ spec:
             name: video
           - mountPath: /tmp
             name: dfx
+          - mountPath: /sys
+            name: sys-fs
+          - mountPath: /config
+            name: config-fs
       volumes:
       - name: video
         hostPath:
@@ -41,8 +47,16 @@ spec:
         hostPath:
           path: /home/petalinux
           type: Directory
+      - name: sys-fs
+        hostPath:
+          path: /sys
+          type: Directory
+      - name: config-fs
+        hostPath:
+          path: /config
+          type: Directory
       nodeSelector:
-        id: worker
+        node-role.kubernetes.io/edge: ""
 ---
 apiVersion: v1
 kind: Service

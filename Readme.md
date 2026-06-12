@@ -16,130 +16,100 @@ Below is the cluster setup diagram. Circle indicates it as a socket server. It w
 
 <img src="https://imgur.com/HRybfGo.jpg" width="300">
 
-## Chapter 2: Setup K3s Cluster
+## Chapter 2: Setup KubeEdge Cluster
 
 We will have:
-* Master/Worker node (Ubuntu20.04.3) on Proxmox VM
-* Worker node (Petalinux 2022.1) on Kria-kv260
+* Cloud Node / Master: A standard Kubernetes cluster (or K3s without agent nodes) running on a Proxmox VM (Ubuntu 20.04/22.04/24.04).
+* Edge Node: Kria KV260 board running custom PetaLinux containing KubeEdge (`edgecore`).
 
-First on Proxmox server, we will set temporary pre-routing rule to nginx and kubectl route or you can add the rule in /etc/network:
+Because KubeEdge uses an outbound WebSocket/QUIC tunnel from the edge to the master, **no inbound port-forwarding or dynamic NAT prerouting rules are required on the KV260 side.**
 
-(Suppose VM's ip is 10.20.0.109 and KV260's ip is 10.20.0.33)
-
-```bash
-$ iptables -t nat -A PREROUTING -i wlp3s0 -p tcp --dport 6443 -j DNAT --to 10.20.0.109
-
-$ iptables -t nat -A PREROUTING -i wlp3s0 -p tcp --dport 8080 -j DNAT --to 10.20.0.109
-
-$ iptables -t nat -A PREROUTING -i wlp3s0 -p tcp --dport 8082 -j DNAT --to 10.20.0.109
-
-$ iptables -t nat -A PREROUTING -i wlp3s0 -p tcp --dport 8084 -j DNAT --to 10.20.0.33
-```
-
-### **On master node (VM)**:
-We will install k3s without using traefik, which is the default router/load-balancer for k3s.
-
-```bash
-$ curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable traefik --bind-address 10.20.0.XXX" K3S_NODE_NAME=master sh -s -
-
-$ export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-
-$ sudo chmod 777 /etc/rancher/k3s/k3s.yaml
-```
+### **On the Master Node (Proxmox VM)**:
+1. Ensure your Kubernetes cluster control plane is running.
+2. Initialize KubeEdge `cloudcore` via `keadm`:
+   ```bash
+   $ keadm init --advertise-address=<VM_IP> --profile version=v1.15.0
+   ```
+3. Retrieve the cloudcore token required for joining edge nodes:
+   ```bash
+   $ keadm gettoken
+   ```
 
 ### Remote kubectl (on your laptop):
-First get kubectl command in your environment and copy and save /etc/rancher/k3s/k3s.yaml to your local KUBECONFIG path. Now you should be able to control the cluster from your laptop.
+Copy your Kubernetes kubeconfig file (e.g. `/etc/rancher/k3s/k3s.yaml` or standard K8s config) to your local `~/.kube/config`. You can now monitor and orchestrate the cluster using standard `kubectl` commands.
 
-Next, deploy nginx
+Next, deploy the ingress controller:
 ```bash
 $ kubectl apply -k kv260-smartapp-clusterserver/nginx
 ```
 
-### On KV260:
+### On the KV260:
+1. Boot the KV260 using the custom Yocto/PetaLinux image compiled with `kubeedge` support.
+2. Join the node to the master using the token retrieved from `cloudcore`:
+   ```bash
+   $ keadm join --cloudcore-ipport=<VM_IP>:10000 --token=<TOKEN> --kubeedge-version=v1.15.0
+   ```
+3. Verify that the edge node successfully registered by running this on your laptop or VM:
+   ```bash
+   $ kubectl get nodes
+   ```
+4. Label the node so that workloads deploy on it:
+   ```bash
+   $ kubectl label node <kv260-node-name> node-role.kubernetes.io/edge=""
+   ```
 
-First we need to copy token from **master node** to enable additional node to be added to the cluster.
-```bash
-$ sudo cat /var/lib/rancher/k3s/server/node-token
-```
-
-Then on KV260 we will install a worker node on it with the token got.
-
-```bash
-$ curl -sfL https://get.k3s.io | K3S_NODE_NAME=worker K3S_TOKEN=<token> K3S_URL=https://<master_ip>:6443 sh - 
-```
-
-After all cluster connection are done, label each node so that we can deploy pods on the selected node
-```bash
-$ kubectl label node worker node-role.kubernetes.io/worker=worker
-
-$ kubectl label node worker id=worker
-
-$ kubectl label node master id=master
-```
+---
 
 ## Chapter 3: Pod and server deployment
-Now we will actually bring up servers. There are three servers, all of which are implemented in python:
 
-1. vitis-ai (pod on master)
-2. xmutil (pod on kv260)
-3. application (bare server on kv260)
+Now we will bring up the cloud and edge servers. There are three components:
 
-**_We have tried to put application in pod, however, there will be problem occur and unresolved. Therefore it is temporary to run server directly on board._**
+1. **vitis-ai** (pod on VM/Master): Handles model compilation and quantization.
+2. **xmutil** (pod on KV260): Handles dynamic FPGA bitstream swaps.
+3. **application** (pod on KV260): Executes the AI model camera selection application.
 
-### Vitis-AI (On VM)
-To deploy Vitis AI pod on master
+*Note: In previous implementations, the application could not run inside a pod. This has been resolved under KubeEdge by running the pod in **privileged mode** and mounting the host `/dev` and `/sys` nodes.*
+
+### Vitis-AI (On VM/Master Node)
+To deploy the Vitis AI compiler pod:
 ```bash
-## copy kv260-smartapp-clusterserver/need onto master
+## copy dependencies onto master VM
 $ scp -r kv260-smartapp-clusterserver/need <vm-node>:~/
 
-## copy arch.json for compilation
+## copy arch.json, custom configs, and datasets
 $ cp need/arch.json <path-to-Vitis-AI>
-
-## copy .prototxt for new model that will later included when deploy model to the board
 $ cp need/my_model.prototxt <path-to-Vitis-AI>
-
-## copy dataset
 $ cp -r need/ALLFORDEMO <path-to-Vitis-AI>
-
-## replace new resnet18_quant.py
 $ cp need/resnet18_quant.py <path-to-Vitis-AI>/src/Vitis-AI-Quantizer/vai_q_pytorch/example/
-
-## copy socket server file
 $ cp server/vitis-server.py <path-to-Vitis-AI>
 
-## Modify vitis and work volume path to your Vitis AI
-
-## Create some folder for vitis-deployment
+## Create necessary host volumes for deployment
 $ mkdir /dev/shm
-
 $ mkdir /opt/xilinx/overlaybins
-
 $ mkdir /opt/xilinx/dsa
 
-## Deploy
-$ kubectl apply -f kv260-smartapp-clusterserver/deployment/vitis.yaml
+## Deploy Vitis AI compiler pod
+$ kubectl apply -f kv260-smartapp-clusterserver/deployment/vitis-ai.yaml
 ```
 
-### Xmutil (On KV260)
-To deploy xmutil pod on kv260
+### Xmutil (On KV260 Node)
+To deploy the hardware overlay manager pod:
 ```bash
-## copy socket file to kv260
+## copy socket script to KV260
 $ scp server/xmutil-server.py <kv260-node>:/home/petalinux/
 
-## Deploy
+## Deploy the privileged pod to KubeEdge
 $ kubectl apply -f kv260-smartapp-clusterserver/deployment/xmutil.yaml
 ```
 
-### Application (On KV260)
-To deploy application on kv260 baremetal
+### Application (On KV260 Node)
+To deploy the containerized camera and DPU application:
 ```bash
-## copy socket file to kv260
+## copy application script to KV260
 $ scp server/app-server.py <kv260-node>:/opt/xilinx/kv260-vvas-sms/app
 
-## Start the server
-$ cd /opt/xilinx/kv260-vvas-sms/app
-
-$ python app-server.py
+## Deploy the privileged application pod to KubeEdge
+$ kubectl apply -f kv260-smartapp-clusterserver/deployment/app-pod.yaml
 ```
 
 
