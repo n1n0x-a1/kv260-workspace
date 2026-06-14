@@ -1,0 +1,94 @@
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xmutil-app
+spec:
+  selector:
+    matchLabels:
+      name: xmutil-backend
+  template:
+    metadata:
+      labels:
+        name: xmutil-backend
+    spec:
+      containers:
+        - name: xmutil
+          image: chriskewis/kv260-xmutil
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+          resources:
+          command: ["python3", "/home/xmutil/xmutil-server.py"]
+          ports:
+            - containerPort: 80
+          volumeMounts:
+          - mountPath: /home/xmutil
+            name: xmutil
+          - mountPath: /opt
+            name: video
+          - mountPath: /tmp
+            name: dfx
+          - mountPath: /sys
+            name: sys-fs
+          - mountPath: /config
+            name: config-fs
+      volumes:
+      - name: video
+        hostPath:
+          path: /opt
+          type: Directory
+      - name: dfx
+        hostPath:
+          path: /tmp
+          type: Directory
+      - name: xmutil
+        hostPath:
+          path: /home/petalinux
+          type: Directory
+      - name: sys-fs
+        hostPath:
+          path: /sys
+          type: Directory
+      - name: config-fs
+        hostPath:
+          path: /config
+          type: Directory
+      nodeSelector:
+        node-role.kubernetes.io/edge: ""
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: xmutil-service
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 80
+  selector:
+    name: xmutil-backend
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: xmutil-ingress
+  annotations:
+    k8s.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: kv260.xmutil.ninox
+    http:
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: xmutil-service
+              port:
+                number: 80

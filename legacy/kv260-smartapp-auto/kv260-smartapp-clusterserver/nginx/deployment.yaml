@@ -1,0 +1,17 @@
+- op: add
+  path: /spec/template/spec/containers/0/args/-
+  value: --tcp-services-configmap=$(POD_NAMESPACE)/tcp-services
+- op: add
+  path: /spec/template/spec/containers/0/ports/-
+  value:
+    name: socket1
+    containerPort: 8080
+    hostPort: 8080
+    protocol: TCP
+- op: add
+  path: /spec/template/spec/containers/0/ports/-
+  value: 
+    name: socket2
+    containerPort: 8082
+    hostPort: 8082
+    protocol: TCP
