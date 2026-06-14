@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="link" dir="" srcset="sources_1">
+  <FileSets>
+    <FileSet Name="kernel_DPUCZDX8G" Type="DesignSrcs">
+      <Config/>
+    </FileSet>
+    <FileSet Name="kernel_v_multi_scaler" Type="DesignSrcs">
+      <File Path="/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/link/int/xo/v_multi_scaler/v_multi_scaler/cpu_sources/v_vscaler.cpp"/>
+      <File Path="/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/link/int/xo/v_multi_scaler/v_multi_scaler/cpu_sources/v_csc.cpp"/>
+      <File Path="/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/link/int/xo/v_multi_scaler/v_multi_scaler/cpu_sources/v_dma.cpp"/>
+      <File Path="/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/link/int/xo/v_multi_scaler/v_multi_scaler/cpu_sources/v_hresampler.cpp"/>
+      <File Path="/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/link/int/xo/v_multi_scaler/v_multi_scaler/cpu_sources/v_vresampler.cpp"/>
+      <File Path="/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/link/int/xo/v_multi_scaler/v_multi_scaler/cpu_sources/v_hscaler.cpp"/>
+      <File Path="/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/link/int/xo/v_multi_scaler/v_multi_scaler/cpu_sources/v_multi_scaler.cpp"/>
+      <Config/>
+    </FileSet>
+    <FileSet Name="sources_1" Type="DesignSrcs">
+      <Config/>
+    </FileSet>
+  </FileSets>
+  <Runs>
+    <Run Id="run_link" Type="Ft102:LinkHwTarget" SrcSet="sources_1" Description="" Dir="run_link">
+      <Strategy>
+        <StratHandle Name="" Flow="Link HW 2018"/>
+        <Step Id="system_link">
+          <Option Id="ConfigFileStr">/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/link/int/syslinkConfig.ini</Option>
+          <Option Id="OptionsStrList"></Option>
+        </Step>
+        <Step Id="cf2sw">
+          <Option Id="OptionsStrList"></Option>
+        </Step>
+        <Step Id="rtd2_system_diagram"/>
+        <Step Id="vpl">
+          <Option Id="ConfigFileStr">/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/link/int/vplConfig.ini</Option>
+          <Option Id="OptionsStrList"></Option>
+        </Step>
+        <Step Id="rtdgen"/>
+        <Step Id="xclbinutil">
+          <Option Id="OptionsStrList"></Option>
+        </Step>
+        <Step Id="xclbinutilinfo">
+          <Option Id="OptionsStrList"></Option>
+        </Step>
+        <Step Id="xclbinutil2nd" EnableStepBool="0"/>
+        <Step Id="generate_sc_driver"/>
+      </Strategy>
+      <GeneratedRun Dir="run_link" File="gen_run.xml"/>
+    </Run>
+  </Runs>
+</project>

@@ -1,0 +1,188 @@
+<profile>
+
+<section name = "Vitis HLS Report for 'vscale_core_bilinear'" level="0">
+<item name = "Date">Thu Jun  4 03:59:45 2026
+</item>
+<item name = "Version">2022.1 (Build 3526262 on Mon Apr 18 15:47:01 MDT 2022)</item>
+<item name = "Project">v_multi_scaler</item>
+<item name = "Solution">solution (Vitis Kernel Flow Target)</item>
+<item name = "Product family">zynquplus</item>
+<item name = "Target device">xck26-sfvc784-2LV-c</item>
+</section>
+
+<section name = "Performance Estimates" level="0">
+<item name = "Timing">
+<section name = "" level="1">
+<item name = "Summary"><table name="" hasTotal="0">
+<keys size="4">Clock, Target, Estimated, Uncertainty</keys>
+<column name="ap_clk">3.33 ns, 2.348 ns, 0.90 ns</column>
+</table>
+</item>
+</section>
+</item>
+<item name = "Latency">
+<section name = "" level="1">
+<item name = "Summary"><table name="" hasTotal="0">
+<keys size="8">, min, max, min, max, min, max, Type</keys>
+<column name="">1, 2088493, 3.333 ns, 6.961 ms, 1, 2088493, no</column>
+</table>
+</item>
+<item name = "Detail">
+<section name = "" level="1">
+<item name = "Instance"><table name="" hasTotal="0">
+<keys size="9">Instance, Module, min, max, min, max, min, max, Type</keys>
+<column name="grp_vscale_core_bilinear_Pipeline_loop_width_for_procpix_fu_151">vscale_core_bilinear_Pipeline_loop_width_for_procpix, 2, 1928, 6.666 ns, 6.426 us, 2, 1928, no</column>
+</table>
+</item>
+<item name = "Loop"><table name="" hasTotal="0">
+<keys size="8">Loop Name, min, max, Latency, achieved, target, Count, Pipelined</keys>
+<column name="- loop_height">0, 2088492, 6 ~ 1932, -, -, 0 ~ 1081, no</column>
+</table>
+</item>
+</section>
+</item>
+</section>
+</item>
+</section>
+
+<section name = "Utilization Estimates" level="0">
+<item name = "Summary"><table name="" hasTotal="1">
+<keys size="6">Name, BRAM_18K, DSP, FF, LUT, URAM</keys>
+<column name="DSP">-, -, -, -, -</column>
+<column name="Expression">-, -, 0, 553, -</column>
+<column name="FIFO">-, -, -, -, -</column>
+<column name="Instance">-, 6, 859, 1028, -</column>
+<column name="Memory">6, -, 0, 0, 0</column>
+<column name="Multiplexer">-, -, -, 103, -</column>
+<column name="Register">-, -, 240, -, -</column>
+<specialColumn name="Available">288, 1248, 234240, 117120, 64</specialColumn>
+<specialColumn name="Utilization (%)">2, ~0, ~0, 1, 0</specialColumn>
+</table>
+</item>
+<item name = "Detail">
+<section name = "" level="1">
+<item name = "Instance"><table name="" hasTotal="1">
+<keys size="7">Instance, Module, BRAM_18K, DSP, FF, LUT, URAM</keys>
+<column name="grp_vscale_core_bilinear_Pipeline_loop_width_for_procpix_fu_151">vscale_core_bilinear_Pipeline_loop_width_for_procpix, 0, 6, 859, 1028, 0</column>
+</table>
+</item>
+<item name = "DSP"><table name="" hasTotal="0">
+<keys size="3">Instance, Module, Expression</keys>
+</table>
+</item>
+<item name = "Memory"><table name="" hasTotal="1">
+<keys size="10">Memory, Module, BRAM_18K, FF, LUT, URAM, Words, Bits, Banks, W*Bits*Banks</keys>
+<column name="LineBuf_val_V_U">vscale_core_bilinear_LineBuf_val_V_RAM_AUTO_1R1W, 3, 0, 0, 0, 960, 48, 1, 46080</column>
+<column name="LineBuf_val_V_1_U">vscale_core_bilinear_LineBuf_val_V_RAM_AUTO_1R1W, 3, 0, 0, 0, 960, 48, 1, 46080</column>
+</table>
+</item>
+<item name = "FIFO"><table name="" hasTotal="1">
+<keys size="8">Name, BRAM_18K, FF, LUT, URAM, Depth, Bits, Size:D*B</keys>
+</table>
+</item>
+<item name = "Expression"><table name="" hasTotal="1">
+<keys size="7">Variable Name, Operation, DSP, FF, LUT, Bitwidth P0, Bitwidth P1</keys>
+<column name="PixArrayLoc_1_fu_297_p2">+, 0, 0, 23, 16, 1</column>
+<column name="WriteLocNext_fu_412_p2">+, 0, 0, 39, 32, 1</column>
+<column name="YLoopSize_fu_198_p2">+, 0, 0, 18, 11, 2</column>
+<column name="add_ln353_fu_204_p2">+, 0, 0, 19, 12, 1</column>
+<column name="offset_1_fu_303_p2">+, 0, 0, 39, 32, 18</column>
+<column name="offset_3_fu_408_p2">+, 0, 0, 39, 32, 32</column>
+<column name="sub95_fu_449_p2">+, 0, 0, 24, 17, 1</column>
+<column name="y_2_fu_253_p2">+, 0, 0, 18, 11, 1</column>
+<column name="OutputWriteEn_1_fu_484_p2">and, 0, 0, 2, 1, 1</column>
+<column name="OutputWriteEn_fu_402_p2">and, 0, 0, 2, 1, 1</column>
+<column name="GetNewLine_1_fu_291_p2">icmp, 0, 0, 13, 16, 1</column>
+<column name="cmp138_fu_367_p2">icmp, 0, 0, 11, 11, 1</column>
+<column name="cmp97_fu_455_p2">icmp, 0, 0, 13, 17, 17</column>
+<column name="icmp25_fu_361_p2">icmp, 0, 0, 11, 10, 1</column>
+<column name="icmp_ln351_fu_184_p2">icmp, 0, 0, 13, 16, 16</column>
+<column name="icmp_ln373_fu_248_p2">icmp, 0, 0, 11, 11, 11</column>
+<column name="icmp_ln377_fu_265_p2">icmp, 0, 0, 11, 11, 1</column>
+<column name="icmp_ln395_1_fu_397_p2">icmp, 0, 0, 20, 32, 32</column>
+<column name="icmp_ln395_fu_392_p2">icmp, 0, 0, 13, 16, 1</column>
+<column name="brmerge_fu_373_p2">or, 0, 0, 2, 1, 1</column>
+<column name="GetNewLine_2_fu_343_p3">select, 0, 0, 2, 1, 1</column>
+<column name="PhaseV_1_fu_476_p3">select, 0, 0, 8, 1, 8</column>
+<column name="PixArrayLoc_2_fu_317_p3">select, 0, 0, 16, 1, 16</column>
+<column name="PixArrayLoc_3_fu_335_p3">select, 0, 0, 16, 1, 16</column>
+<column name="TotalLines_fu_190_p3">select, 0, 0, 10, 1, 11</column>
+<column name="WriteLocNext_1_fu_425_p3">select, 0, 0, 32, 1, 32</column>
+<column name="WriteLocNext_2_fu_439_p3">select, 0, 0, 32, 1, 32</column>
+<column name="offset_2_fu_309_p3">select, 0, 0, 32, 1, 32</column>
+<column name="offset_4_fu_418_p3">select, 0, 0, 32, 1, 32</column>
+<column name="offset_5_fu_433_p3">select, 0, 0, 32, 1, 32</column>
+</table>
+</item>
+<item name = "Multiplexer"><table name="" hasTotal="1">
+<keys size="5">Name, LUT, Input Size, Bits, Total Bits</keys>
+<column name="GetNewLine_reg_140">9, 2, 1, 2</column>
+<column name="PhaseV_fu_92">9, 2, 8, 16</column>
+<column name="PixArrayLoc_fu_104">9, 2, 16, 32</column>
+<column name="WriteLoc_fu_96">9, 2, 32, 64</column>
+<column name="ap_NS_fsm">31, 6, 1, 6</column>
+<column name="offset_fu_88">9, 2, 32, 64</column>
+<column name="stream_2_read">9, 2, 1, 2</column>
+<column name="stream_3_write">9, 2, 1, 2</column>
+<column name="y_fu_100">9, 2, 11, 22</column>
+</table>
+</item>
+<item name = "Register"><table name="" hasTotal="1">
+<keys size="5">Name, FF, LUT, Bits, Const Bits</keys>
+<column name="GetNewLine_2_reg_590">1, 0, 1, 0</column>
+<column name="GetNewLine_reg_140">1, 0, 1, 0</column>
+<column name="OutputWriteEn_1_reg_620">1, 0, 1, 0</column>
+<column name="OutputWriteEn_reg_605">1, 0, 1, 0</column>
+<column name="PhaseV_1_reg_615">8, 0, 8, 0</column>
+<column name="PhaseV_fu_92">8, 0, 8, 0</column>
+<column name="PixArrayLoc_3_reg_585">16, 0, 16, 0</column>
+<column name="PixArrayLoc_fu_104">16, 0, 16, 0</column>
+<column name="WriteLoc_fu_96">32, 0, 32, 0</column>
+<column name="XLoopSize_reg_549">11, 0, 11, 0</column>
+<column name="YLoopSize_reg_544">11, 0, 11, 0</column>
+<column name="ap_CS_fsm">5, 0, 5, 0</column>
+<column name="brmerge_reg_600">1, 0, 1, 0</column>
+<column name="cmp138_reg_595">1, 0, 1, 0</column>
+<column name="cmp97_reg_610">1, 0, 1, 0</column>
+<column name="grp_vscale_core_bilinear_Pipeline_loop_width_for_procpix_fu_151_ap_start_reg">1, 0, 1, 0</column>
+<column name="icmp_ln377_reg_560">1, 0, 1, 0</column>
+<column name="offset_2_reg_574">32, 0, 32, 0</column>
+<column name="offset_fu_88">32, 0, 32, 0</column>
+<column name="tmp_1_reg_580">16, 0, 16, 0</column>
+<column name="trunc_ln_reg_569">6, 0, 6, 0</column>
+<column name="y_fu_100">11, 0, 11, 0</column>
+<column name="zext_ln348_reg_534">11, 0, 32, 21</column>
+<column name="zext_ln351_reg_539">16, 0, 17, 1</column>
+</table>
+</item>
+</section>
+</item>
+</section>
+
+<section name = "Interface" level="0">
+<item name = "Summary"><table name="" hasTotal="0">
+<keys size="6">RTL Ports, Dir, Bits, Protocol, Source Object, C Type</keys>
+<column name="ap_clk">in, 1, ap_ctrl_hs, vscale_core_bilinear, return value</column>
+<column name="ap_rst">in, 1, ap_ctrl_hs, vscale_core_bilinear, return value</column>
+<column name="ap_start">in, 1, ap_ctrl_hs, vscale_core_bilinear, return value</column>
+<column name="ap_done">out, 1, ap_ctrl_hs, vscale_core_bilinear, return value</column>
+<column name="ap_idle">out, 1, ap_ctrl_hs, vscale_core_bilinear, return value</column>
+<column name="ap_ready">out, 1, ap_ctrl_hs, vscale_core_bilinear, return value</column>
+<column name="stream_2_dout">in, 48, ap_fifo, stream_2, pointer</column>
+<column name="stream_2_num_data_valid">in, 5, ap_fifo, stream_2, pointer</column>
+<column name="stream_2_fifo_cap">in, 5, ap_fifo, stream_2, pointer</column>
+<column name="stream_2_empty_n">in, 1, ap_fifo, stream_2, pointer</column>
+<column name="stream_2_read">out, 1, ap_fifo, stream_2, pointer</column>
+<column name="HeightIn">in, 16, ap_none, HeightIn, scalar</column>
+<column name="WidthIn">in, 12, ap_none, WidthIn, scalar</column>
+<column name="HeightOut">in, 11, ap_none, HeightOut, scalar</column>
+<column name="LineRate">in, 32, ap_none, LineRate, scalar</column>
+<column name="stream_3_din">out, 48, ap_fifo, stream_3, pointer</column>
+<column name="stream_3_num_data_valid">in, 13, ap_fifo, stream_3, pointer</column>
+<column name="stream_3_fifo_cap">in, 13, ap_fifo, stream_3, pointer</column>
+<column name="stream_3_full_n">in, 1, ap_fifo, stream_3, pointer</column>
+<column name="stream_3_write">out, 1, ap_fifo, stream_3, pointer</column>
+</table>
+</item>
+</section>
+</profile>

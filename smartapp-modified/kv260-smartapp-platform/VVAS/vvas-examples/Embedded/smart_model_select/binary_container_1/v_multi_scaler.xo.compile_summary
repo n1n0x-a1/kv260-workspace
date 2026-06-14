@@ -1,0 +1,250 @@
+<ENTRY>
+{
+ "thisFile": "/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/v_multi_scaler.xo.compile_summary",
+ "connectId": "",
+ "serverToken": "",
+ "timestamp": "0"
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_CmdStep",
+ "dateTimestamp": "Thu Jun  4 03:46:34 2026",
+ "timestampMillis": "1780544794658",
+ "buildStep": {
+  "cmdId": "046fcac0-5d5a-45fa-b2fe-04366ec28090",
+  "name": "v++",
+  "logFile": "/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/_x/v_multi_scaler/v_multi_scaler.steps.log",
+  "commandLine": "/tools/Xilinx/Vitis/2022.1/bin/unwrapped/lnx64.o/v++  --vivado.prop \"run.__KERNEL__.{STEPS.SYNTH_DESIGN.ARGS.MORE OPTIONS}={-directive sdx_optimization_effort_high}\" --advanced.misc \"report=type report_timing_summary name impl_report_timing_summary_route_design_summary steps {route_design} runs {impl_1} options {-max_paths 10}\" --advanced.misc \"report=type report_timing_summary name impl_report_timing_summary_post_route_phys_opt_design_summary steps {post_route_phys_opt_design} runs {impl_1} options {-max_paths 10}\" --platform ../../../../kria-vitis-platforms/kv260/platforms/xilinx_kv260_ispMipiRx_vcu_DP_202210_1/kv260_ispMipiRx_vcu_DP.xpfm -t hw -s --kernel v_multi_scaler -I. -I../../../../VVAS/vvas-accel-hw/multiscaler/src/hls -c -o binary_container_1/v_multi_scaler.xo ../../../../VVAS/vvas-accel-hw/multiscaler/src/v_multi_scaler.cpp ../../../../VVAS/vvas-accel-hw/multiscaler/src/v_hresampler.cpp ../../../../VVAS/vvas-accel-hw/multiscaler/src/v_hscaler.cpp ../../../../VVAS/vvas-accel-hw/multiscaler/src/v_dma.cpp ../../../../VVAS/vvas-accel-hw/multiscaler/src/v_csc.cpp ../../../../VVAS/vvas-accel-hw/multiscaler/src/v_vresampler.cpp ../../../../VVAS/vvas-accel-hw/multiscaler/src/v_vscaler.cpp ",
+  "args": [
+   "--platform",
+   "../../../../kria-vitis-platforms/kv260/platforms/xilinx_kv260_ispMipiRx_vcu_DP_202210_1/kv260_ispMipiRx_vcu_DP.xpfm",
+   "-t",
+   "hw",
+   "-s",
+   "--kernel",
+   "v_multi_scaler",
+   "-I.",
+   "-I../../../../VVAS/vvas-accel-hw/multiscaler/src/hls",
+   "-c",
+   "-o",
+   "binary_container_1/v_multi_scaler.xo",
+   "../../../../VVAS/vvas-accel-hw/multiscaler/src/v_multi_scaler.cpp",
+   "../../../../VVAS/vvas-accel-hw/multiscaler/src/v_hresampler.cpp",
+   "../../../../VVAS/vvas-accel-hw/multiscaler/src/v_hscaler.cpp",
+   "../../../../VVAS/vvas-accel-hw/multiscaler/src/v_dma.cpp",
+   "../../../../VVAS/vvas-accel-hw/multiscaler/src/v_csc.cpp",
+   "../../../../VVAS/vvas-accel-hw/multiscaler/src/v_vresampler.cpp",
+   "../../../../VVAS/vvas-accel-hw/multiscaler/src/v_vscaler.cpp"
+  ],
+  "iniFiles": [],
+  "cwd": "/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Status",
+ "dateTimestamp": "Thu Jun  4 03:46:34 2026",
+ "timestampMillis": "1780544794659",
+ "status": {
+  "cmdId": "046fcac0-5d5a-45fa-b2fe-04366ec28090",
+  "state": "CS_RUNNING"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_FlowMetaData",
+ "dateTimestamp": "Thu Jun  4 03:46:43 2026",
+ "timestampMillis": "1780544803620",
+ "buildSummary": {
+  "hardwarePlatform": "kv260_ispMipiRx_vcu_DP.xpfm",
+  "hardwareDsa": "kv260_ispMipiRx_vcu_DP.xsa",
+  "platformDirectory": "/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/kria-vitis-platforms/kv260/platforms/xilinx_kv260_ispMipiRx_vcu_DP_202210_1",
+  "runtime": "OpenCL",
+  "systemConfig": "Linux",
+  "flow": "BF_COMPILE",
+  "target": "TT_HW",
+  "kernels": [
+   {
+    "base": {
+     "type": "KERNEL",
+     "name": "v_multi_scaler",
+     "file": "/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/v_multi_scaler.xo",
+     "reports": [],
+     "uuid": ""
+    },
+    "sources": [
+     "/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-accel-hw/multiscaler/src/v_multi_scaler.cpp",
+     "/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-accel-hw/multiscaler/src/v_hresampler.cpp",
+     "/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-accel-hw/multiscaler/src/v_hscaler.cpp",
+     "/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-accel-hw/multiscaler/src/v_dma.cpp",
+     "/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-accel-hw/multiscaler/src/v_csc.cpp",
+     "/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-accel-hw/multiscaler/src/v_vresampler.cpp",
+     "/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-accel-hw/multiscaler/src/v_vscaler.cpp"
+    ],
+    "psSources": [],
+    "cuNames": [],
+    "type": "HLS",
+    "frequency": 0,
+    "freqUnits": ""
+   }
+  ],
+  "toolVersion": "Vitis V++ Compiler Release 2022.1. SW Build 3524075 on 2022-04-13-17:42:45"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_SubCmdStep",
+ "dateTimestamp": "Thu Jun  4 03:46:43 2026",
+ "timestampMillis": "1780544803635",
+ "buildStep": {
+  "cmdId": "8bd6ba06-56e9-44a3-8a6c-1d580f76e9d2",
+  "name": "vitis_hls",
+  "logFile": "/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/_x/v_multi_scaler/v_multi_scaler/vitis_hls.log",
+  "commandLine": "vitis_hls -f /home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/_x/v_multi_scaler/v_multi_scaler/v_multi_scaler.tcl -messageDb vitis_hls.pb",
+  "args": [
+   "vitis_hls",
+   "-f",
+   "/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/_x/v_multi_scaler/v_multi_scaler/v_multi_scaler.tcl",
+   "-messageDb",
+   "vitis_hls.pb"
+  ],
+  "iniFiles": [],
+  "cwd": "/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Status",
+ "dateTimestamp": "Thu Jun  4 03:46:43 2026",
+ "timestampMillis": "1780544803636",
+ "status": {
+  "cmdId": "8bd6ba06-56e9-44a3-8a6c-1d580f76e9d2",
+  "state": "CS_RUNNING"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Status",
+ "dateTimestamp": "Thu Jun  4 04:04:09 2026",
+ "timestampMillis": "1780545849657",
+ "status": {
+  "cmdId": "8bd6ba06-56e9-44a3-8a6c-1d580f76e9d2",
+  "state": "CS_PASSED"
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Report",
+ "dateTimestamp": "Thu Jun  4 04:04:09 2026",
+ "timestampMillis": "1780545849808",
+ "report": {
+  "path": "/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/_x/v_multi_scaler/v_multi_scaler/v_multi_scaler/solution/.autopilot/db/v_multi_scaler.design.xml",
+  "name": "v_multi_scaler",
+  "fileType": "XML",
+  "reportType": "KERNEL_HLS_REPORT",
+  "cmdId": ""
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Report",
+ "dateTimestamp": "Thu Jun  4 04:04:09 2026",
+ "timestampMillis": "1780545849809",
+ "report": {
+  "path": "/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/_x/v_multi_scaler/v_multi_scaler/v_multi_scaler/solution/.autopilot/db/.message_syn.xml",
+  "name": "v_multi_scaler",
+  "fileType": "XML",
+  "reportType": "KERNEL_HLS_DRC_SYNTHESIS",
+  "cmdId": ""
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Report",
+ "dateTimestamp": "Thu Jun  4 04:04:09 2026",
+ "timestampMillis": "1780545849812",
+ "report": {
+  "path": "/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/_x/reports/v_multi_scaler/hls_reports/v_multi_scaler_csynth.rpt",
+  "name": "v_multi_scaler",
+  "fileType": "TEXT",
+  "reportType": "KERNEL_HLS_CSYNTH",
+  "cmdId": ""
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Report",
+ "dateTimestamp": "Thu Jun  4 04:04:09 2026",
+ "timestampMillis": "1780545849812",
+ "report": {
+  "path": "/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/_x/v_multi_scaler/v_multi_scaler/v_multi_scaler/solution/syn/report/v_multi_scaler_csynth.xml",
+  "name": "v_multi_scaler",
+  "fileType": "XML",
+  "reportType": "KERNEL_HLS_CSYNTH",
+  "cmdId": ""
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Report",
+ "dateTimestamp": "Thu Jun  4 04:04:09 2026",
+ "timestampMillis": "1780545849894",
+ "report": {
+  "path": "/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/_x/reports/v_multi_scaler/system_estimate_v_multi_scaler.xtxt",
+  "name": "",
+  "fileType": "TEXT",
+  "reportType": "GLOBAL_SYSTEM_ESTIMATE",
+  "cmdId": ""
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Report",
+ "dateTimestamp": "Thu Jun  4 04:04:11 2026",
+ "timestampMillis": "1780545851272",
+ "report": {
+  "path": "/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/_x/reports/v_multi_scaler/v++_compile_v_multi_scaler_guidance.html",
+  "name": "",
+  "fileType": "HTML",
+  "reportType": "GLOBAL_RULECHECK_GUIDANCE",
+  "cmdId": ""
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Report",
+ "dateTimestamp": "Thu Jun  4 04:04:11 2026",
+ "timestampMillis": "1780545851273",
+ "report": {
+  "path": "/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/_x/v++_compile_v_multi_scaler_guidance.pb",
+  "name": "",
+  "fileType": "BINARY_PROTOBUF",
+  "reportType": "GLOBAL_RULECHECK_GUIDANCE",
+  "cmdId": ""
+ }
+}
+</ENTRY>
+<ENTRY>
+{
+ "type": "ET_Status",
+ "dateTimestamp": "Thu Jun  4 04:04:11 2026",
+ "timestampMillis": "1780545851275",
+ "status": {
+  "cmdId": "046fcac0-5d5a-45fa-b2fe-04366ec28090",
+  "state": "CS_PASSED"
+ }
+}
+</ENTRY>

@@ -1,0 +1,194 @@
+
+
+================================================================
+== Vitis HLS Report for 'hscale_core_bilinear'
+================================================================
+* Date:           Thu Jun  4 03:59:50 2026
+
+* Version:        2022.1 (Build 3526262 on Mon Apr 18 15:47:01 MDT 2022)
+* Project:        v_multi_scaler
+* Solution:       solution (Vitis Kernel Flow Target)
+* Product family: zynquplus
+* Target device:  xck26-sfvc784-2LV-c
+
+
+================================================================
+== Performance Estimates
+================================================================
++ Timing: 
+    * Summary: 
+    +--------+---------+----------+------------+
+    |  Clock |  Target | Estimated| Uncertainty|
+    +--------+---------+----------+------------+
+    |ap_clk  |  3.33 ns|  2.335 ns|     0.90 ns|
+    +--------+---------+----------+------------+
+
++ Latency: 
+    * Summary: 
+    +---------+---------+----------+----------+-----+-----+---------+
+    |  Latency (cycles) |  Latency (absolute) |  Interval | Pipeline|
+    |   min   |   max   |    min   |    max   | min | max |   Type  |
+    +---------+---------+----------+----------+-----+-----+---------+
+    |        ?|        ?|         ?|         ?|    ?|    ?|       no|
+    +---------+---------+----------+----------+-----+-----+---------+
+
+    + Detail: 
+        * Instance: 
+        +-----------------------------------------------------+------------------------------------------+---------+---------+----------+----------+-----+-----+---------+
+        |                                                     |                                          |  Latency (cycles) |  Latency (absolute) |  Interval | Pipeline|
+        |                       Instance                      |                  Module                  |   min   |   max   |    min   |    max   | min | max |   Type  |
+        +-----------------------------------------------------+------------------------------------------+---------+---------+----------+----------+-----+-----+---------+
+        |grp_hscale_core_bilinear_Pipeline_loop_width_fu_200  |hscale_core_bilinear_Pipeline_loop_width  |        ?|        ?|         ?|         ?|    ?|    ?|       no|
+        +-----------------------------------------------------+------------------------------------------+---------+---------+----------+----------+-----+-----+---------+
+
+        * Loop: 
+        +---------------+---------+---------+----------+-----------+-----------+-----------+----------+
+        |               |  Latency (cycles) | Iteration|  Initiation Interval  |    Trip   |          |
+        |   Loop Name   |   min   |   max   |  Latency |  achieved |   target  |   Count   | Pipelined|
+        +---------------+---------+---------+----------+-----------+-----------+-----------+----------+
+        |- loop_height  |        ?|        ?|         ?|          -|          -|  16 ~ 1080|        no|
+        +---------------+---------+---------+----------+-----------+-----------+-----------+----------+
+
+
+
+================================================================
+== Utilization Estimates
+================================================================
+* Summary: 
++-----------------+---------+------+--------+--------+-----+
+|       Name      | BRAM_18K|  DSP |   FF   |   LUT  | URAM|
++-----------------+---------+------+--------+--------+-----+
+|DSP              |        -|     -|       -|       -|    -|
+|Expression       |        -|     -|       0|      70|    -|
+|FIFO             |        -|     -|       -|       -|    -|
+|Instance         |        0|     6|     547|    2127|    -|
+|Memory           |        -|     -|       -|       -|    -|
+|Multiplexer      |        -|     -|       -|      47|    -|
+|Register         |        -|     -|     266|       -|    -|
++-----------------+---------+------+--------+--------+-----+
+|Total            |        0|     6|     813|    2244|    0|
++-----------------+---------+------+--------+--------+-----+
+|Available        |      288|  1248|  234240|  117120|   64|
++-----------------+---------+------+--------+--------+-----+
+|Utilization (%)  |        0|    ~0|      ~0|       1|    0|
++-----------------+---------+------+--------+--------+-----+
+
++ Detail: 
+    * Instance: 
+    +-----------------------------------------------------+------------------------------------------+---------+----+-----+------+-----+
+    |                       Instance                      |                  Module                  | BRAM_18K| DSP|  FF |  LUT | URAM|
+    +-----------------------------------------------------+------------------------------------------+---------+----+-----+------+-----+
+    |grp_hscale_core_bilinear_Pipeline_loop_width_fu_200  |hscale_core_bilinear_Pipeline_loop_width  |        0|   6|  547|  2127|    0|
+    +-----------------------------------------------------+------------------------------------------+---------+----+-----+------+-----+
+    |Total                                                |                                          |        0|   6|  547|  2127|    0|
+    +-----------------------------------------------------+------------------------------------------+---------+----+-----+------+-----+
+
+    * DSP: 
+    N/A
+
+    * Memory: 
+    N/A
+
+    * FIFO: 
+    N/A
+
+    * Expression: 
+    +-----------------------+----------+----+---+----+------------+------------+
+    |     Variable Name     | Operation| DSP| FF| LUT| Bitwidth P0| Bitwidth P1|
+    +-----------------------+----------+----+---+----+------------+------------+
+    |LoopSize_fu_273_p2     |         +|   0|  0|  18|          11|           3|
+    |y_16_fu_292_p2         |         +|   0|  0|  18|          11|           1|
+    |icmp_ln179_fu_287_p2   |      icmp|   0|  0|  11|          11|          11|
+    |icmp_ln224_fu_251_p2   |      icmp|   0|  0|  13|          16|          16|
+    |TotalPixels_fu_265_p3  |    select|   0|  0|  10|           1|          11|
+    +-----------------------+----------+----+---+----+------------+------------+
+    |Total                  |          |   0|  0|  70|          50|          42|
+    +-----------------------+----------+----+---+----+------------+------------+
+
+    * Multiplexer: 
+    +----------------+----+-----------+-----+-----------+
+    |      Name      | LUT| Input Size| Bits| Total Bits|
+    +----------------+----+-----------+-----+-----------+
+    |ap_NS_fsm       |  20|          4|    1|          4|
+    |stream_3_read   |   9|          2|    1|          2|
+    |stream_4_write  |   9|          2|    1|          2|
+    |y_fu_58         |   9|          2|   11|         22|
+    +----------------+----+-----------+-----+-----------+
+    |Total           |  47|         10|   14|         30|
+    +----------------+----+-----------+-----+-----------+
+
+    * Register: 
+    +------------------------------------------------------------------+----+----+-----+-----------+
+    |                               Name                               | FF | LUT| Bits| Const Bits|
+    +------------------------------------------------------------------+----+----+-----+-----------+
+    |LoopSize_reg_475                                                  |  11|   0|   11|          0|
+    |PixArray_val_V_10_fu_102                                          |   8|   0|    8|          0|
+    |PixArray_val_V_11_fu_106                                          |   8|   0|    8|          0|
+    |PixArray_val_V_12_fu_110                                          |   8|   0|    8|          0|
+    |PixArray_val_V_13_fu_114                                          |   8|   0|    8|          0|
+    |PixArray_val_V_14_fu_118                                          |   8|   0|    8|          0|
+    |PixArray_val_V_15_fu_122                                          |   8|   0|    8|          0|
+    |PixArray_val_V_16_fu_126                                          |   8|   0|    8|          0|
+    |PixArray_val_V_17_fu_130                                          |   8|   0|    8|          0|
+    |PixArray_val_V_18_fu_134                                          |   8|   0|    8|          0|
+    |PixArray_val_V_19_fu_138                                          |   8|   0|    8|          0|
+    |PixArray_val_V_1_fu_66                                            |   8|   0|    8|          0|
+    |PixArray_val_V_20_fu_142                                          |   8|   0|    8|          0|
+    |PixArray_val_V_21_fu_146                                          |   8|   0|    8|          0|
+    |PixArray_val_V_22_fu_150                                          |   8|   0|    8|          0|
+    |PixArray_val_V_23_fu_154                                          |   8|   0|    8|          0|
+    |PixArray_val_V_2_fu_70                                            |   8|   0|    8|          0|
+    |PixArray_val_V_3_fu_74                                            |   8|   0|    8|          0|
+    |PixArray_val_V_4_fu_78                                            |   8|   0|    8|          0|
+    |PixArray_val_V_5_fu_82                                            |   8|   0|    8|          0|
+    |PixArray_val_V_6_fu_86                                            |   8|   0|    8|          0|
+    |PixArray_val_V_7_fu_90                                            |   8|   0|    8|          0|
+    |PixArray_val_V_8_fu_94                                            |   8|   0|    8|          0|
+    |PixArray_val_V_9_fu_98                                            |   8|   0|    8|          0|
+    |PixArray_val_V_fu_62                                              |   8|   0|    8|          0|
+    |ap_CS_fsm                                                         |   3|   0|    3|          0|
+    |grp_hscale_core_bilinear_Pipeline_loop_width_fu_200_ap_start_reg  |   1|   0|    1|          0|
+    |p_0_0_0931905_lcssa26_fu_158                                      |   8|   0|    8|          0|
+    |p_0_0_093_120513_lcssa32_fu_170                                   |   8|   0|    8|          0|
+    |p_0_0_093_1881958_lcssa28_fu_162                                  |   8|   0|    8|          0|
+    |p_0_0_093_1_121016_lcssa34_fu_174                                 |   8|   0|    8|          0|
+    |p_0_0_0_1_224119_lcssa36_fu_178                                   |   8|   0|    8|          0|
+    |p_0_0_0_223611_lcssa30_fu_166                                     |   8|   0|    8|          0|
+    |y_fu_58                                                           |  11|   0|   11|          0|
+    +------------------------------------------------------------------+----+----+-----+-----------+
+    |Total                                                             | 266|   0|  266|          0|
+    +------------------------------------------------------------------+----+----+-----+-----------+
+
+
+
+================================================================
+== Interface
+================================================================
+* Summary: 
++-------------------------+-----+-----+------------+----------------------+--------------+
+|        RTL Ports        | Dir | Bits|  Protocol  |     Source Object    |    C Type    |
++-------------------------+-----+-----+------------+----------------------+--------------+
+|ap_clk                   |   in|    1|  ap_ctrl_hs|  hscale_core_bilinear|  return value|
+|ap_rst                   |   in|    1|  ap_ctrl_hs|  hscale_core_bilinear|  return value|
+|ap_start                 |   in|    1|  ap_ctrl_hs|  hscale_core_bilinear|  return value|
+|ap_done                  |  out|    1|  ap_ctrl_hs|  hscale_core_bilinear|  return value|
+|ap_idle                  |  out|    1|  ap_ctrl_hs|  hscale_core_bilinear|  return value|
+|ap_ready                 |  out|    1|  ap_ctrl_hs|  hscale_core_bilinear|  return value|
+|stream_3_dout            |   in|   48|     ap_fifo|              stream_3|       pointer|
+|stream_3_num_data_valid  |   in|   13|     ap_fifo|              stream_3|       pointer|
+|stream_3_fifo_cap        |   in|   13|     ap_fifo|              stream_3|       pointer|
+|stream_3_empty_n         |   in|    1|     ap_fifo|              stream_3|       pointer|
+|stream_3_read            |  out|    1|     ap_fifo|              stream_3|       pointer|
+|Height                   |   in|   11|     ap_none|                Height|        scalar|
+|InPixels                 |   in|   16|     ap_none|              InPixels|        scalar|
+|OutPixels                |   in|   16|     ap_none|             OutPixels|        scalar|
+|arrPhasesH_address0      |  out|   10|   ap_memory|            arrPhasesH|         array|
+|arrPhasesH_ce0           |  out|    1|   ap_memory|            arrPhasesH|         array|
+|arrPhasesH_q0            |   in|   18|   ap_memory|            arrPhasesH|         array|
+|stream_4_din             |  out|   48|     ap_fifo|              stream_4|       pointer|
+|stream_4_num_data_valid  |   in|    5|     ap_fifo|              stream_4|       pointer|
+|stream_4_fifo_cap        |   in|    5|     ap_fifo|              stream_4|       pointer|
+|stream_4_full_n          |   in|    1|     ap_fifo|              stream_4|       pointer|
+|stream_4_write           |  out|    1|     ap_fifo|              stream_4|       pointer|
++-------------------------+-----+-----+------------+----------------------+--------------+
+

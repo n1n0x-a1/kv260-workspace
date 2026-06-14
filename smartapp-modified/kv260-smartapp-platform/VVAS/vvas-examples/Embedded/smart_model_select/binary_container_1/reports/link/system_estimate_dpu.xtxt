@@ -1,0 +1,163 @@
+===============================================================================
+Version:    v++ v2022.1 (64-bit)
+Build:      SW Build 3524075 on 2022-04-13-17:42:45
+Copyright:  Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+Created:    Thu Jun  4 07:20:22 2026
+===============================================================================
+
+-------------------------------------------------------------------------------
+Design Name:             dpu
+Target Device:           xilinx:kv260_ispMipiRx_vcu_DP:kv260_ispMipiRx_vcu_DP:1.0
+Target Clock:            299.997000MHz
+Total number of kernels: 2
+-------------------------------------------------------------------------------
+
+Kernel Summary
+Kernel Name     Type  Target              OpenCL Library  Compute Units
+--------------  ----  ------------------  --------------  -------------
+v_multi_scaler  c     fpga0:OCL_REGION_0  dpu             1
+DPUCZDX8G       ip    fpga0:OCL_REGION_0  dpu             1
+
+
+-------------------------------------------------------------------------------
+OpenCL Binary:     dpu
+Kernels mapped to: clc_region
+
+Timing Information (MHz)
+Compute Unit      Kernel Name     Module Name                                           Target Frequency  Estimated Frequency
+----------------  --------------  ----------------------------------------------------  ----------------  -------------------
+v_multi_scaler_1  v_multi_scaler  calc_phaseH                                           300.300293        425.531921
+v_multi_scaler_1  v_multi_scaler  entry_proc                                            300.300293        821.692688
+v_multi_scaler_1  v_multi_scaler  v_scaler_top_Block_entry69_proc                       300.300293        545.256287
+v_multi_scaler_1  v_multi_scaler  v_scaler_top_Loop_VITIS_LOOP_840_1_proc               300.300293        593.119812
+v_multi_scaler_1  v_multi_scaler  v_scaler_top_Block_for_end_proc                       300.300293        411.015198
+v_multi_scaler_1  v_multi_scaler  AXIMMvideo2Bytes_Pipeline_VITIS_LOOP_119_1            300.300293        411.015198
+v_multi_scaler_1  v_multi_scaler  AXIMMvideo2Bytes_Pipeline_VITIS_LOOP_130_2            300.300293        411.015198
+v_multi_scaler_1  v_multi_scaler  AXIMMvideo2Bytes                                      300.300293        411.015198
+v_multi_scaler_1  v_multi_scaler  Bytes2MultiPixStream_Pipeline_VITIS_LOOP_559_7        300.300293        411.015198
+v_multi_scaler_1  v_multi_scaler  Bytes2MultiPixStream_Pipeline_VITIS_LOOP_492_4        300.300293        411.015198
+v_multi_scaler_1  v_multi_scaler  Bytes2MultiPixStream_Pipeline_VITIS_LOOP_308_1        300.300293        411.015198
+v_multi_scaler_1  v_multi_scaler  Bytes2MultiPixStream                                  300.300293        411.015198
+v_multi_scaler_1  v_multi_scaler  v_vcresampler_Pipeline_VITIS_LOOP_88_2                300.300293        430.848755
+v_multi_scaler_1  v_multi_scaler  v_vcresampler                                         300.300293        411.015198
+v_multi_scaler_1  v_multi_scaler  v_hcresampler_Pipeline_VITIS_LOOP_82_2                300.300293        518.67218
+v_multi_scaler_1  v_multi_scaler  v_hcresampler                                         300.300293        411.015198
+v_multi_scaler_1  v_multi_scaler  vscale_core_bilinear_Pipeline_loop_width_for_procpix  300.300293        425.894379
+v_multi_scaler_1  v_multi_scaler  vscale_core_bilinear                                  300.300293        425.894379
+v_multi_scaler_1  v_multi_scaler  v_vscaler_Pipeline_VITIS_LOOP_85_2                    300.300293        411.015198
+v_multi_scaler_1  v_multi_scaler  v_vscaler                                             300.300293        411.015198
+v_multi_scaler_1  v_multi_scaler  reg_ap_uint_18_s                                      300.300293        inf
+v_multi_scaler_1  v_multi_scaler  hscale_core_bilinear_Pipeline_loop_width              300.300293        428.265503
+v_multi_scaler_1  v_multi_scaler  hscale_core_bilinear                                  300.300293        428.265503
+v_multi_scaler_1  v_multi_scaler  v_hscaler_Pipeline_VITIS_LOOP_94_2                    300.300293        411.015198
+v_multi_scaler_1  v_multi_scaler  v_hscaler                                             300.300293        411.015198
+v_multi_scaler_1  v_multi_scaler  v_csc_Pipeline_VITIS_LOOP_51_2                        300.300293        433.275543
+v_multi_scaler_1  v_multi_scaler  v_csc                                                 300.300293        433.275543
+v_multi_scaler_1  v_multi_scaler  v_hcresampler_1_Pipeline_VITIS_LOOP_82_2              300.300293        472.143524
+v_multi_scaler_1  v_multi_scaler  v_hcresampler_1                                       300.300293        411.015198
+v_multi_scaler_1  v_multi_scaler  v_vcresampler_2_Pipeline_VITIS_LOOP_88_2              300.300293        455.166138
+v_multi_scaler_1  v_multi_scaler  v_vcresampler_2                                       300.300293        411.015198
+v_multi_scaler_1  v_multi_scaler  preProcessKernel_Pipeline_VITIS_LOOP_89_2             300.300293        412.201141
+v_multi_scaler_1  v_multi_scaler  preProcessKernel                                      300.300293        411.015198
+v_multi_scaler_1  v_multi_scaler  MultiPixStream2Bytes_Pipeline_VITIS_LOOP_1437_9       300.300293        608.272461
+v_multi_scaler_1  v_multi_scaler  MultiPixStream2Bytes_Pipeline_VITIS_LOOP_1380_4       300.300293        608.272461
+v_multi_scaler_1  v_multi_scaler  MultiPixStream2Bytes_Pipeline_VITIS_LOOP_1279_1       300.300293        608.272461
+v_multi_scaler_1  v_multi_scaler  MultiPixStream2Bytes                                  300.300293        411.015198
+v_multi_scaler_1  v_multi_scaler  Bytes2AXIMMvideo_Pipeline_VITIS_LOOP_1649_1           300.300293        411.015198
+v_multi_scaler_1  v_multi_scaler  Bytes2AXIMMvideo_Pipeline_VITIS_LOOP_1660_2           300.300293        411.015198
+v_multi_scaler_1  v_multi_scaler  Bytes2AXIMMvideo                                      300.300293        411.015198
+v_multi_scaler_1  v_multi_scaler  v_scaler_top                                          300.300293        411.015198
+v_multi_scaler_1  v_multi_scaler  v_multi_scaler                                        300.300293        411.015198
+
+Latency Information
+Compute Unit      Kernel Name     Module Name                                           Start Interval  Best (cycles)  Avg (cycles)  Worst (cycles)  Best (absolute)  Avg (absolute)  Worst (absolute)
+----------------  --------------  ----------------------------------------------------  --------------  -------------  ------------  --------------  ---------------  --------------  ----------------
+v_multi_scaler_1  v_multi_scaler  calc_phaseH                                           2 ~ 262146      2              undef         262146          6.666 ns         undef           0.874 ms
+v_multi_scaler_1  v_multi_scaler  entry_proc                                            0               0              0             0               0 ns             0 ns            0 ns
+v_multi_scaler_1  v_multi_scaler  v_scaler_top_Block_entry69_proc                       1               1              1             1               3.333 ns         3.333 ns        3.333 ns
+v_multi_scaler_1  v_multi_scaler  v_scaler_top_Loop_VITIS_LOOP_840_1_proc               8               8              8             8               26.664 ns        26.664 ns       26.664 ns
+v_multi_scaler_1  v_multi_scaler  v_scaler_top_Block_for_end_proc                       6               6              6             6               19.998 ns        19.998 ns       19.998 ns
+v_multi_scaler_1  v_multi_scaler  AXIMMvideo2Bytes_Pipeline_VITIS_LOOP_119_1            4 ~ 4099        4              undef         4099            13.332 ns        undef           13.662 us
+v_multi_scaler_1  v_multi_scaler  AXIMMvideo2Bytes_Pipeline_VITIS_LOOP_130_2            4 ~ 4099        4              undef         4099            13.332 ns        undef           13.662 us
+v_multi_scaler_1  v_multi_scaler  AXIMMvideo2Bytes                                      2 ~ 36357122    2              undef         36357122        6.666 ns         undef           0.121 sec
+v_multi_scaler_1  v_multi_scaler  Bytes2MultiPixStream_Pipeline_VITIS_LOOP_559_7        2 ~ 10930       2              undef         10930           6.666 ns         undef           36.430 us
+v_multi_scaler_1  v_multi_scaler  Bytes2MultiPixStream_Pipeline_VITIS_LOOP_492_4        2 ~ 10930       2              undef         10930           6.666 ns         undef           36.430 us
+v_multi_scaler_1  v_multi_scaler  Bytes2MultiPixStream_Pipeline_VITIS_LOOP_308_1        2 ~ 32770       2              undef         32770           6.666 ns         undef           0.109 ms
+v_multi_scaler_1  v_multi_scaler  Bytes2MultiPixStream                                  2 ~ 141579363   2              undef         141579363       6.666 ns         undef           0.472 sec
+v_multi_scaler_1  v_multi_scaler  v_vcresampler_Pipeline_VITIS_LOOP_88_2                4 ~ 32771       4              undef         32771           13.332 ns        undef           0.109 ms
+v_multi_scaler_1  v_multi_scaler  v_vcresampler                                         1 ~ 1073905659  1              undef         1073905659      3.333 ns         undef           3.579 sec
+v_multi_scaler_1  v_multi_scaler  v_hcresampler_Pipeline_VITIS_LOOP_82_2                5 ~ 32771       5              undef         32771           16.665 ns        undef           0.109 ms
+v_multi_scaler_1  v_multi_scaler  v_hcresampler                                         2 ~ 1073938427  2              undef         1073938427      6.666 ns         undef           3.579 sec
+v_multi_scaler_1  v_multi_scaler  vscale_core_bilinear_Pipeline_loop_width_for_procpix  2 ~ 1928        2              undef         1928            6.666 ns         undef           6.426 us
+v_multi_scaler_1  v_multi_scaler  vscale_core_bilinear                                  1 ~ 2088493     1              undef         2088493         3.333 ns         undef           6.961 ms
+v_multi_scaler_1  v_multi_scaler  v_vscaler_Pipeline_VITIS_LOOP_85_2                    2 ~ 962         2              undef         962             6.666 ns         undef           3.206 us
+v_multi_scaler_1  v_multi_scaler  v_vscaler                                             2 ~ 2088495     2              undef         2088495         6.666 ns         undef           6.961 ms
+v_multi_scaler_1  v_multi_scaler  reg_ap_uint_18_s                                      1               1              1             1               3.333 ns         3.333 ns        3.333 ns
+v_multi_scaler_1  v_multi_scaler  hscale_core_bilinear_Pipeline_loop_width              undef           undef          undef         undef           undef            undef           undef
+v_multi_scaler_1  v_multi_scaler  hscale_core_bilinear                                  undef           undef          undef         undef           undef            undef           undef
+v_multi_scaler_1  v_multi_scaler  v_hscaler_Pipeline_VITIS_LOOP_94_2                    2 ~ 962         2              undef         962             6.666 ns         undef           3.206 us
+v_multi_scaler_1  v_multi_scaler  v_hscaler                                             undef           undef          undef         undef           undef            undef           undef
+v_multi_scaler_1  v_multi_scaler  v_csc_Pipeline_VITIS_LOOP_51_2                        2 ~ 971         2              undef         971             6.666 ns         undef           3.236 us
+v_multi_scaler_1  v_multi_scaler  v_csc                                                 1 ~ 1050841     1              undef         1050841         3.333 ns         undef           3.502 ms
+v_multi_scaler_1  v_multi_scaler  v_hcresampler_1_Pipeline_VITIS_LOOP_82_2              5 ~ 32771       5              undef         32771           16.665 ns        undef           0.109 ms
+v_multi_scaler_1  v_multi_scaler  v_hcresampler_1                                       2 ~ 1073938427  2              undef         1073938427      6.666 ns         undef           3.579 sec
+v_multi_scaler_1  v_multi_scaler  v_vcresampler_2_Pipeline_VITIS_LOOP_88_2              4 ~ 32771       4              undef         32771           13.332 ns        undef           0.109 ms
+v_multi_scaler_1  v_multi_scaler  v_vcresampler_2                                       1 ~ 1073905659  1              undef         1073905659      3.333 ns         undef           3.579 sec
+v_multi_scaler_1  v_multi_scaler  preProcessKernel_Pipeline_VITIS_LOOP_89_2             undef           undef          undef         undef           undef            undef           undef
+v_multi_scaler_1  v_multi_scaler  preProcessKernel                                      undef           undef          undef         undef           undef            undef           undef
+v_multi_scaler_1  v_multi_scaler  MultiPixStream2Bytes_Pipeline_VITIS_LOOP_1437_9       4 ~ 10932       4              undef         10932           13.332 ns        undef           36.436 us
+v_multi_scaler_1  v_multi_scaler  MultiPixStream2Bytes_Pipeline_VITIS_LOOP_1380_4       4 ~ 10932       4              undef         10932           13.332 ns        undef           36.436 us
+v_multi_scaler_1  v_multi_scaler  MultiPixStream2Bytes_Pipeline_VITIS_LOOP_1279_1       4 ~ 32772       4              undef         32772           13.332 ns        undef           0.109 ms
+v_multi_scaler_1  v_multi_scaler  MultiPixStream2Bytes                                  2 ~ 141588003   2              undef         141588003       6.666 ns         undef           0.472 sec
+v_multi_scaler_1  v_multi_scaler  Bytes2AXIMMvideo_Pipeline_VITIS_LOOP_1649_1           4 ~ 4099        4              undef         4099            13.332 ns        undef           13.662 us
+v_multi_scaler_1  v_multi_scaler  Bytes2AXIMMvideo_Pipeline_VITIS_LOOP_1660_2           4 ~ 4099        4              undef         4099            13.332 ns        undef           13.662 us
+v_multi_scaler_1  v_multi_scaler  Bytes2AXIMMvideo                                      2 ~ 36344162    2              undef         36344162        6.666 ns         undef           0.121 sec
+v_multi_scaler_1  v_multi_scaler  v_scaler_top                                          undef           undef          undef         undef           undef            undef           undef
+v_multi_scaler_1  v_multi_scaler  v_multi_scaler                                        undef           undef          undef         undef           undef            undef           undef
+
+Area Information
+Compute Unit      Kernel Name     Module Name                                           FF     LUT    DSP  BRAM  URAM
+----------------  --------------  ----------------------------------------------------  -----  -----  ---  ----  ----
+v_multi_scaler_1  v_multi_scaler  calc_phaseH                                           261    1004   0    0     0
+v_multi_scaler_1  v_multi_scaler  entry_proc                                            3      56     0    0     0
+v_multi_scaler_1  v_multi_scaler  v_scaler_top_Block_entry69_proc                       135    348    0    0     0
+v_multi_scaler_1  v_multi_scaler  v_scaler_top_Loop_VITIS_LOOP_840_1_proc               345    402    0    0     0
+v_multi_scaler_1  v_multi_scaler  v_scaler_top_Block_for_end_proc                       284    325    0    0     0
+v_multi_scaler_1  v_multi_scaler  AXIMMvideo2Bytes_Pipeline_VITIS_LOOP_119_1            147    92     0    0     0
+v_multi_scaler_1  v_multi_scaler  AXIMMvideo2Bytes_Pipeline_VITIS_LOOP_130_2            147    92     0    0     0
+v_multi_scaler_1  v_multi_scaler  AXIMMvideo2Bytes                                      812    2027   0    0     0
+v_multi_scaler_1  v_multi_scaler  Bytes2MultiPixStream_Pipeline_VITIS_LOOP_559_7        369    284    0    0     0
+v_multi_scaler_1  v_multi_scaler  Bytes2MultiPixStream_Pipeline_VITIS_LOOP_492_4        369    284    0    0     0
+v_multi_scaler_1  v_multi_scaler  Bytes2MultiPixStream_Pipeline_VITIS_LOOP_308_1        257    298    0    0     0
+v_multi_scaler_1  v_multi_scaler  Bytes2MultiPixStream                                  1550   1864   0    0     0
+v_multi_scaler_1  v_multi_scaler  v_vcresampler_Pipeline_VITIS_LOOP_88_2                200    421    0    0     0
+v_multi_scaler_1  v_multi_scaler  v_vcresampler                                         355    631    0    4     0
+v_multi_scaler_1  v_multi_scaler  v_hcresampler_Pipeline_VITIS_LOOP_82_2                220    544    0    0     0
+v_multi_scaler_1  v_multi_scaler  v_hcresampler                                         498    730    0    0     0
+v_multi_scaler_1  v_multi_scaler  vscale_core_bilinear_Pipeline_loop_width_for_procpix  859    1028   0    0     0
+v_multi_scaler_1  v_multi_scaler  vscale_core_bilinear                                  1099   1684   0    6     0
+v_multi_scaler_1  v_multi_scaler  v_vscaler_Pipeline_VITIS_LOOP_85_2                    18     94     0    0     0
+v_multi_scaler_1  v_multi_scaler  v_vscaler                                             1217   1946   0    6     0
+v_multi_scaler_1  v_multi_scaler  reg_ap_uint_18_s                                      37     14     0    0     0
+v_multi_scaler_1  v_multi_scaler  hscale_core_bilinear_Pipeline_loop_width              547    2127   0    0     0
+v_multi_scaler_1  v_multi_scaler  hscale_core_bilinear                                  813    2244   0    0     0
+v_multi_scaler_1  v_multi_scaler  v_hscaler_Pipeline_VITIS_LOOP_94_2                    18     94     0    0     0
+v_multi_scaler_1  v_multi_scaler  v_hscaler                                             882    2488   0    0     0
+v_multi_scaler_1  v_multi_scaler  v_csc_Pipeline_VITIS_LOOP_51_2                        1101   1239   0    0     0
+v_multi_scaler_1  v_multi_scaler  v_csc                                                 1139   1343   0    0     0
+v_multi_scaler_1  v_multi_scaler  v_hcresampler_1_Pipeline_VITIS_LOOP_82_2              253    640    0    0     0
+v_multi_scaler_1  v_multi_scaler  v_hcresampler_1                                       547    824    0    0     0
+v_multi_scaler_1  v_multi_scaler  v_vcresampler_2_Pipeline_VITIS_LOOP_88_2              206    399    0    0     0
+v_multi_scaler_1  v_multi_scaler  v_vcresampler_2                                       360    609    0    3     0
+v_multi_scaler_1  v_multi_scaler  preProcessKernel_Pipeline_VITIS_LOOP_89_2             1078   649    0    0     0
+v_multi_scaler_1  v_multi_scaler  preProcessKernel                                      1132   784    0    0     0
+v_multi_scaler_1  v_multi_scaler  MultiPixStream2Bytes_Pipeline_VITIS_LOOP_1437_9       757    851    0    0     0
+v_multi_scaler_1  v_multi_scaler  MultiPixStream2Bytes_Pipeline_VITIS_LOOP_1380_4       757    851    0    0     0
+v_multi_scaler_1  v_multi_scaler  MultiPixStream2Bytes_Pipeline_VITIS_LOOP_1279_1       547    644    0    0     0
+v_multi_scaler_1  v_multi_scaler  MultiPixStream2Bytes                                  2514   3256   0    0     0
+v_multi_scaler_1  v_multi_scaler  Bytes2AXIMMvideo_Pipeline_VITIS_LOOP_1649_1           147    94     0    0     0
+v_multi_scaler_1  v_multi_scaler  Bytes2AXIMMvideo_Pipeline_VITIS_LOOP_1660_2           147    94     0    0     0
+v_multi_scaler_1  v_multi_scaler  Bytes2AXIMMvideo                                      977    2143   0    0     0
+v_multi_scaler_1  v_multi_scaler  v_scaler_top                                          20077  25586  0    25    0
+v_multi_scaler_1  v_multi_scaler  v_multi_scaler                                        22495  30037  0    29    0
+-------------------------------------------------------------------------------

@@ -1,0 +1,30 @@
+WARNING: [v++ 60-2363] Duplicate entry found for 'vivado.prop' option: 'run.impl_1.strategy=Congestion_SpreadLogic_low' will be overwritten by 'run.impl_1.strategy=Performance_NetDelay_low'
+INFO: [v++ 60-1306] Additional information associated with this v++ link can be found at:
+	Reports: /home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/reports/link
+	Log files: /home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/logs/link
+INFO: [v++ 60-1548] Creating build summary session with primary output /home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/dpu.xclbin.link_summary, at Thu Jun  4 04:04:26 2026
+INFO: [v++ 60-1316] Initiating connection to rulecheck server, at Thu Jun  4 04:04:26 2026
+INFO: [v++ 60-1315] Creating rulecheck session with output '/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/reports/link/v++_link_dpu_guidance.html', at Thu Jun  4 04:04:30 2026
+INFO: [v++ 60-895]   Target platform: /home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/kria-vitis-platforms/kv260/platforms/xilinx_kv260_ispMipiRx_vcu_DP_202210_1/kv260_ispMipiRx_vcu_DP.xpfm
+INFO: [v++ 60-1578]   This platform contains Xilinx Shell Archive '/home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/kria-vitis-platforms/kv260/platforms/xilinx_kv260_ispMipiRx_vcu_DP_202210_1/hw/kv260_ispMipiRx_vcu_DP.xsa'
+INFO: [v++ 60-629] Linking for hardware target
+INFO: [v++ 60-423]   Target device: kv260_ispMipiRx_vcu_DP
+INFO: [v++ 60-1332] Run 'run_link' status: Not started
+INFO: [v++ 60-1443] [04:04:37] Run run_link: Step system_link: Started
+INFO: [v++ 60-1453] Command Line: system_link --xo /home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/dpu.xo --xo /home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/v_multi_scaler.xo -keep --config /home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/link/int/syslinkConfig.ini --xpfm /home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/kria-vitis-platforms/kv260/platforms/xilinx_kv260_ispMipiRx_vcu_DP_202210_1/kv260_ispMipiRx_vcu_DP.xpfm --target hw --output_dir /home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/link/int --temp_dir /home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/link/sys_link
+INFO: [v++ 60-1454] Run Directory: /home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/link/run_link
+INFO: [SYSTEM_LINK 60-1316] Initiating connection to rulecheck server, at Thu Jun  4 04:04:41 2026
+ERROR: [SYSTEM_LINK 82-39] Unable to run blocking command: command not found: unzip
+ERROR: [SYSTEM_LINK 82-68] Error reading /home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/dpu.xo and extracting IP information
+Extracting xo v2 file /home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/dpu.xo
+ERROR: [SdxLink 83-1001] Cannot open 
+ERROR: [SYSTEM_LINK 82-58] Error creating metadata parser for /home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/dpu.xo xo.xml
+ERROR: [SYSTEM_LINK 82-84] Unable to process .xo file: /home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/VVAS/vvas-examples/Embedded/smart_model_select/binary_container_1/dpu.xo
+ERROR: [SYSTEM_LINK 82-66] Error processing .xo files
+ERROR: [SYSTEM_LINK 82-100] Error processing object files, exiting
+INFO: [v++ 60-1442] [04:04:41] Run run_link: Step system_link: Failed
+Time (s): cpu = 00:00:04 ; elapsed = 00:00:04 . Memory (MB): peak = 2322.953 ; gain = 0.000 ; free physical = 18603 ; free virtual = 37692
+ERROR: [v++ 60-661] v++ link run 'run_link' failed
+ERROR: [v++ 60-626] Kernel link failed to complete
+ERROR: [v++ 60-703] Failed to finish linking
+INFO: [v++ 60-1653] Closing dispatch client.

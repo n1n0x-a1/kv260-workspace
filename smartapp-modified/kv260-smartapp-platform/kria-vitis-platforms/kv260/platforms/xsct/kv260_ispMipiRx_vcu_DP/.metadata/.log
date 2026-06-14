@@ -1,0 +1,124 @@
+!SESSION 2026-06-04 03:34:19.422 -----------------------------------------------
+eclipse.buildId=2021.2
+java.version=11.0.11
+java.vendor=Oracle Corporation
+BootLoader constants: OS=linux, ARCH=x86_64, WS=gtk, NL=en_US
+Framework arguments:  -application com.xilinx.sdx.cmdline.service 44363
+Command-line arguments:  -os linux -ws gtk -arch x86_64 -application com.xilinx.sdx.cmdline.service 44363 -data /home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/kria-vitis-platforms/kv260/platforms/xsct/kv260_ispMipiRx_vcu_DP
+
+!ENTRY org.eclipse.osgi 4 0 2026-06-04 03:34:20.795
+!MESSAGE Bundle reference:file:org.apache.log4j_1.2.15.v201012070815.jar not found.
+
+!ENTRY org.eclipse.osgi 4 0 2026-06-04 03:34:20.879
+!MESSAGE Bundle reference:file:org.slf4j.impl.log4j12_1.7.2.v20131105-2200.jar not found.
+
+!ENTRY org.eclipse.osgi 4 0 2026-06-04 03:34:34.682
+!MESSAGE An error occurred while automatically activating bundle org.eclipse.ui.ide (456).
+!STACK 0
+org.osgi.framework.BundleException: Exception in org.eclipse.ui.internal.ide.IDEWorkbenchPlugin.start() of bundle org.eclipse.ui.ide.
+	at org.eclipse.osgi.internal.framework.BundleContextImpl.startActivator(BundleContextImpl.java:863)
+	at org.eclipse.osgi.internal.framework.BundleContextImpl.start(BundleContextImpl.java:791)
+	at org.eclipse.osgi.internal.framework.EquinoxBundle.startWorker0(EquinoxBundle.java:1015)
+	at org.eclipse.osgi.internal.framework.EquinoxBundle$EquinoxModule.startWorker(EquinoxBundle.java:365)
+	at org.eclipse.osgi.container.Module.doStart(Module.java:603)
+	at org.eclipse.osgi.container.Module.start(Module.java:467)
+	at org.eclipse.osgi.framework.util.SecureAction.start(SecureAction.java:493)
+	at org.eclipse.osgi.internal.hooks.EclipseLazyStarter.postFindLocalClass(EclipseLazyStarter.java:117)
+	at org.eclipse.osgi.internal.loader.classpath.ClasspathManager.findLocalClass(ClasspathManager.java:571)
+	at org.eclipse.osgi.internal.loader.ModuleClassLoader.findLocalClass(ModuleClassLoader.java:346)
+	at org.eclipse.osgi.internal.loader.BundleLoader.findLocalClass(BundleLoader.java:398)
+	at org.eclipse.osgi.internal.loader.sources.SingleSourcePackage.loadClass(SingleSourcePackage.java:41)
+	at org.eclipse.osgi.internal.loader.BundleLoader.findClass(BundleLoader.java:473)
+	at org.eclipse.osgi.internal.loader.ModuleClassLoader.loadClass(ModuleClassLoader.java:171)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:522)
+	at com.xilinx.sdx.cmdline.application.SdxCmdHandlerFactory.<clinit>(SdxCmdHandlerFactory.java:17)
+	at com.xilinx.sdx.cmdline.service.SdxTcfCmdServer.command(SdxTcfCmdServer.java:90)
+	at com.xilinx.sdx.cmdline.service.SdxTcfCmdServer$1.run(SdxTcfCmdServer.java:76)
+	at java.base/java.lang.Thread.run(Thread.java:829)
+Caused by: java.lang.UnsatisfiedLinkError: Could not load SWT library. Reasons: 
+	no swt-pi4-gtk-4932r18 in java.library.path: [/tools/Xilinx/Vitis/2022.1/tps/lnx64/javafx-sdk-11.0.2/lib, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o/Default, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o, /tools/Xilinx/Vitis/2022.1/tps/lnx64/jre11.0.11_9/lib/, /tools/Xilinx/Vitis/2022.1/tps/lnx64/jre11.0.11_9/lib//server, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o/Default, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o, /tools/Xilinx/Vitis/2022.1/tps/lnx64/python-3.8.3/lib, /tools/Xilinx/Vitis/2022.1/aietools/lib/lnx64.o, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o/Default, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o, /tools/Xilinx/Vitis/2022.1/bin/../lnx64/tools/dot/lib, /tools/Xilinx/Vitis/2022.1/bin/../lnx64/tools/dot/lib, /usr/java/packages/lib, /usr/lib64, /lib64, /lib, /usr/lib]
+	no swt-pi4-gtk in java.library.path: [/tools/Xilinx/Vitis/2022.1/tps/lnx64/javafx-sdk-11.0.2/lib, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o/Default, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o, /tools/Xilinx/Vitis/2022.1/tps/lnx64/jre11.0.11_9/lib/, /tools/Xilinx/Vitis/2022.1/tps/lnx64/jre11.0.11_9/lib//server, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o/Default, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o, /tools/Xilinx/Vitis/2022.1/tps/lnx64/python-3.8.3/lib, /tools/Xilinx/Vitis/2022.1/aietools/lib/lnx64.o, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o/Default, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o, /tools/Xilinx/Vitis/2022.1/bin/../lnx64/tools/dot/lib, /tools/Xilinx/Vitis/2022.1/bin/../lnx64/tools/dot/lib, /usr/java/packages/lib, /usr/lib64, /lib64, /lib, /usr/lib]
+	Can't load library: /root/.swt/lib/linux/x86_64/libswt-pi4-gtk-4932r18.so
+	Can't load library: /root/.swt/lib/linux/x86_64/libswt-pi4-gtk.so
+
+	at org.eclipse.swt.internal.Library.loadLibrary(Library.java:342)
+	at org.eclipse.swt.internal.Library.loadLibrary(Library.java:256)
+	at org.eclipse.swt.internal.gtk.OS.<clinit>(OS.java:90)
+	at org.eclipse.swt.internal.Converter.wcsToMbcs(Converter.java:209)
+	at org.eclipse.swt.internal.Converter.wcsToMbcs(Converter.java:155)
+	at org.eclipse.swt.widgets.Display.<clinit>(Display.java:164)
+	at org.eclipse.ui.internal.ide.IDEWorkbenchPlugin.createProblemsViews(IDEWorkbenchPlugin.java:391)
+	at org.eclipse.ui.internal.ide.IDEWorkbenchPlugin.start(IDEWorkbenchPlugin.java:348)
+	at org.eclipse.osgi.internal.framework.BundleContextImpl$3.run(BundleContextImpl.java:842)
+	at org.eclipse.osgi.internal.framework.BundleContextImpl$3.run(BundleContextImpl.java:1)
+	at java.base/java.security.AccessController.doPrivileged(Native Method)
+	at org.eclipse.osgi.internal.framework.BundleContextImpl.startActivator(BundleContextImpl.java:834)
+	... 18 more
+Root exception:
+java.lang.UnsatisfiedLinkError: Could not load SWT library. Reasons: 
+	no swt-pi4-gtk-4932r18 in java.library.path: [/tools/Xilinx/Vitis/2022.1/tps/lnx64/javafx-sdk-11.0.2/lib, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o/Default, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o, /tools/Xilinx/Vitis/2022.1/tps/lnx64/jre11.0.11_9/lib/, /tools/Xilinx/Vitis/2022.1/tps/lnx64/jre11.0.11_9/lib//server, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o/Default, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o, /tools/Xilinx/Vitis/2022.1/tps/lnx64/python-3.8.3/lib, /tools/Xilinx/Vitis/2022.1/aietools/lib/lnx64.o, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o/Default, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o, /tools/Xilinx/Vitis/2022.1/bin/../lnx64/tools/dot/lib, /tools/Xilinx/Vitis/2022.1/bin/../lnx64/tools/dot/lib, /usr/java/packages/lib, /usr/lib64, /lib64, /lib, /usr/lib]
+	no swt-pi4-gtk in java.library.path: [/tools/Xilinx/Vitis/2022.1/tps/lnx64/javafx-sdk-11.0.2/lib, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o/Default, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o, /tools/Xilinx/Vitis/2022.1/tps/lnx64/jre11.0.11_9/lib/, /tools/Xilinx/Vitis/2022.1/tps/lnx64/jre11.0.11_9/lib//server, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o/Default, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o, /tools/Xilinx/Vitis/2022.1/tps/lnx64/python-3.8.3/lib, /tools/Xilinx/Vitis/2022.1/aietools/lib/lnx64.o, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o/Default, /tools/Xilinx/Vitis/2022.1/lib/lnx64.o, /tools/Xilinx/Vitis/2022.1/bin/../lnx64/tools/dot/lib, /tools/Xilinx/Vitis/2022.1/bin/../lnx64/tools/dot/lib, /usr/java/packages/lib, /usr/lib64, /lib64, /lib, /usr/lib]
+	Can't load library: /root/.swt/lib/linux/x86_64/libswt-pi4-gtk-4932r18.so
+	Can't load library: /root/.swt/lib/linux/x86_64/libswt-pi4-gtk.so
+
+	at org.eclipse.swt.internal.Library.loadLibrary(Library.java:342)
+	at org.eclipse.swt.internal.Library.loadLibrary(Library.java:256)
+	at org.eclipse.swt.internal.gtk.OS.<clinit>(OS.java:90)
+	at org.eclipse.swt.internal.Converter.wcsToMbcs(Converter.java:209)
+	at org.eclipse.swt.internal.Converter.wcsToMbcs(Converter.java:155)
+	at org.eclipse.swt.widgets.Display.<clinit>(Display.java:164)
+	at org.eclipse.ui.internal.ide.IDEWorkbenchPlugin.createProblemsViews(IDEWorkbenchPlugin.java:391)
+	at org.eclipse.ui.internal.ide.IDEWorkbenchPlugin.start(IDEWorkbenchPlugin.java:348)
+	at org.eclipse.osgi.internal.framework.BundleContextImpl$3.run(BundleContextImpl.java:842)
+	at org.eclipse.osgi.internal.framework.BundleContextImpl$3.run(BundleContextImpl.java:1)
+	at java.base/java.security.AccessController.doPrivileged(Native Method)
+	at org.eclipse.osgi.internal.framework.BundleContextImpl.startActivator(BundleContextImpl.java:834)
+	at org.eclipse.osgi.internal.framework.BundleContextImpl.start(BundleContextImpl.java:791)
+	at org.eclipse.osgi.internal.framework.EquinoxBundle.startWorker0(EquinoxBundle.java:1015)
+	at org.eclipse.osgi.internal.framework.EquinoxBundle$EquinoxModule.startWorker(EquinoxBundle.java:365)
+	at org.eclipse.osgi.container.Module.doStart(Module.java:603)
+	at org.eclipse.osgi.container.Module.start(Module.java:467)
+	at org.eclipse.osgi.framework.util.SecureAction.start(SecureAction.java:493)
+	at org.eclipse.osgi.internal.hooks.EclipseLazyStarter.postFindLocalClass(EclipseLazyStarter.java:117)
+	at org.eclipse.osgi.internal.loader.classpath.ClasspathManager.findLocalClass(ClasspathManager.java:571)
+	at org.eclipse.osgi.internal.loader.ModuleClassLoader.findLocalClass(ModuleClassLoader.java:346)
+	at org.eclipse.osgi.internal.loader.BundleLoader.findLocalClass(BundleLoader.java:398)
+	at org.eclipse.osgi.internal.loader.sources.SingleSourcePackage.loadClass(SingleSourcePackage.java:41)
+	at org.eclipse.osgi.internal.loader.BundleLoader.findClass(BundleLoader.java:473)
+	at org.eclipse.osgi.internal.loader.ModuleClassLoader.loadClass(ModuleClassLoader.java:171)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:522)
+	at com.xilinx.sdx.cmdline.application.SdxCmdHandlerFactory.<clinit>(SdxCmdHandlerFactory.java:17)
+	at com.xilinx.sdx.cmdline.service.SdxTcfCmdServer.command(SdxTcfCmdServer.java:90)
+	at com.xilinx.sdx.cmdline.service.SdxTcfCmdServer$1.run(SdxTcfCmdServer.java:76)
+	at java.base/java.lang.Thread.run(Thread.java:829)
+
+!ENTRY org.eclipse.core.jobs 2 2 2026-06-04 03:34:35.951
+!MESSAGE Job found still running after platform shutdown.  Jobs should be canceled by the plugin that scheduled them during shutdown: org.eclipse.core.runtime.jobs.Job$1
+!SESSION 2026-06-04 03:36:31.030 -----------------------------------------------
+eclipse.buildId=2021.2
+java.version=11.0.11
+java.vendor=Oracle Corporation
+BootLoader constants: OS=linux, ARCH=x86_64, WS=gtk, NL=en_US
+Framework arguments:  -application com.xilinx.sdx.cmdline.service 34999
+Command-line arguments:  -os linux -ws gtk -arch x86_64 -application com.xilinx.sdx.cmdline.service 34999 -data /home/syvesdh/NinoxWorkspace/kv260-workspace/smartapp-modified/kv260-smartapp-platform/kria-vitis-platforms/kv260/platforms/xsct/kv260_ispMipiRx_vcu_DP
+
+!ENTRY org.eclipse.osgi 4 0 2026-06-04 03:36:32.443
+!MESSAGE Bundle reference:file:org.apache.log4j_1.2.15.v201012070815.jar not found.
+
+!ENTRY org.eclipse.osgi 4 0 2026-06-04 03:36:32.564
+!MESSAGE Bundle reference:file:org.slf4j.impl.log4j12_1.7.2.v20131105-2200.jar not found.
+
+!ENTRY org.eclipse.core.resources 2 10035 2026-06-04 03:36:44.297
+!MESSAGE The workspace will exit with unsaved changes in this session.
+
+!ENTRY org.eclipse.core.jobs 4 2 2026-06-04 03:36:44.393
+!MESSAGE An internal error occurred during: "C/C++ Indexer".
+!STACK 0
+java.lang.NullPointerException
+	at org.eclipse.core.internal.runtime.InternalPlatform.getLog(InternalPlatform.java:361)
+	at org.eclipse.core.runtime.Plugin.getLog(Plugin.java:237)
+	at org.eclipse.cdt.core.CCorePlugin.log(CCorePlugin.java:1617)
+	at org.eclipse.cdt.core.CCorePlugin.log(CCorePlugin.java:1596)
+	at org.eclipse.cdt.core.CCorePlugin.log(CCorePlugin.java:1580)
+	at org.eclipse.cdt.internal.core.pdom.PDOMIndexerJob.run(PDOMIndexerJob.java:170)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)

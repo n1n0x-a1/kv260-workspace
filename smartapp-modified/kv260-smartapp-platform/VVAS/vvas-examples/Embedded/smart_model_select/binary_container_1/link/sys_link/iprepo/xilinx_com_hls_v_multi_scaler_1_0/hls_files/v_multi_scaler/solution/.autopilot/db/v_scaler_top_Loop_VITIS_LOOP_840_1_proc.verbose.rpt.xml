@@ -1,0 +1,173 @@
+<profile>
+
+<section name = "Vitis HLS Report for 'v_scaler_top_Loop_VITIS_LOOP_840_1_proc'" level="0">
+<item name = "Date">Thu Jun  4 03:59:32 2026
+</item>
+<item name = "Version">2022.1 (Build 3526262 on Mon Apr 18 15:47:01 MDT 2022)</item>
+<item name = "Project">v_multi_scaler</item>
+<item name = "Solution">solution (Vitis Kernel Flow Target)</item>
+<item name = "Product family">zynquplus</item>
+<item name = "Target device">xck26-sfvc784-2LV-c</item>
+</section>
+
+<section name = "Performance Estimates" level="0">
+<item name = "Timing">
+<section name = "" level="1">
+<item name = "Summary"><table name="" hasTotal="0">
+<keys size="4">Clock, Target, Estimated, Uncertainty</keys>
+<column name="ap_clk">3.33 ns, 1.686 ns, 0.90 ns</column>
+</table>
+</item>
+</section>
+</item>
+<item name = "Latency">
+<section name = "" level="1">
+<item name = "Summary"><table name="" hasTotal="0">
+<keys size="8">, min, max, min, max, min, max, Type</keys>
+<column name="">8, 8, 26.664 ns, 26.664 ns, 8, 8, no</column>
+</table>
+</item>
+<item name = "Detail">
+<section name = "" level="1">
+<item name = "Instance"><table name="" hasTotal="0">
+<keys size="9">Instance, Module, min, max, min, max, min, max, Type</keys>
+</table>
+</item>
+<item name = "Loop"><table name="" hasTotal="0">
+<keys size="8">Loop Name, min, max, Latency, achieved, target, Count, Pipelined</keys>
+<column name="- VITIS_LOOP_840_1">6, 6, 2, 1, 1, 6, yes</column>
+</table>
+</item>
+</section>
+</item>
+</section>
+</item>
+</section>
+
+<section name = "Utilization Estimates" level="0">
+<item name = "Summary"><table name="" hasTotal="1">
+<keys size="6">Name, BRAM_18K, DSP, FF, LUT, URAM</keys>
+<column name="DSP">-, -, -, -, -</column>
+<column name="Expression">-, -, 0, 258, -</column>
+<column name="FIFO">-, -, -, -, -</column>
+<column name="Instance">-, -, -, -, -</column>
+<column name="Memory">-, -, -, -, -</column>
+<column name="Multiplexer">-, -, -, 144, -</column>
+<column name="Register">-, -, 345, -, -</column>
+<specialColumn name="Available">288, 1248, 234240, 117120, 64</specialColumn>
+<specialColumn name="Utilization (%)">0, 0, ~0, ~0, 0</specialColumn>
+</table>
+</item>
+<item name = "Detail">
+<section name = "" level="1">
+<item name = "Instance"><table name="" hasTotal="1">
+<keys size="7">Instance, Module, BRAM_18K, DSP, FF, LUT, URAM</keys>
+</table>
+</item>
+<item name = "DSP"><table name="" hasTotal="0">
+<keys size="3">Instance, Module, Expression</keys>
+</table>
+</item>
+<item name = "Memory"><table name="" hasTotal="1">
+<keys size="10">Memory, Module, BRAM_18K, FF, LUT, URAM, Words, Bits, Banks, W*Bits*Banks</keys>
+</table>
+</item>
+<item name = "FIFO"><table name="" hasTotal="1">
+<keys size="8">Name, BRAM_18K, FF, LUT, URAM, Depth, Bits, Size:D*B</keys>
+</table>
+</item>
+<item name = "Expression"><table name="" hasTotal="1">
+<keys size="7">Variable Name, Operation, DSP, FF, LUT, Bitwidth P0, Bitwidth P1</keys>
+<column name="add_ln840_fu_99_p2">+, 0, 0, 10, 3, 1</column>
+<column name="and_ln848_1_fu_193_p2">and, 0, 0, 2, 1, 1</column>
+<column name="and_ln848_fu_179_p2">and, 0, 0, 2, 1, 1</column>
+<column name="and_ln850_1_fu_241_p2">and, 0, 0, 2, 1, 1</column>
+<column name="and_ln850_fu_227_p2">and, 0, 0, 2, 1, 1</column>
+<column name="ap_condition_88">and, 0, 0, 2, 1, 1</column>
+<column name="icmp_ln840_fu_93_p2">icmp, 0, 0, 8, 3, 3</column>
+<column name="icmp_ln847_fu_133_p2">icmp, 0, 0, 8, 3, 2</column>
+<column name="icmp_ln848_1_fu_147_p2">icmp, 0, 0, 8, 2, 1</column>
+<column name="icmp_ln848_fu_141_p2">icmp, 0, 0, 8, 2, 1</column>
+<column name="ap_block_pp0_stage0_11001">or, 0, 0, 2, 1, 1</column>
+<column name="or_ln848_1_fu_165_p2">or, 0, 0, 2, 1, 1</column>
+<column name="or_ln848_fu_159_p2">or, 0, 0, 2, 1, 1</column>
+<column name="or_ln850_1_fu_213_p2">or, 0, 0, 2, 1, 1</column>
+<column name="or_ln850_fu_207_p2">or, 0, 0, 2, 1, 1</column>
+<column name="temp_13_fu_171_p3">select, 0, 0, 32, 1, 32</column>
+<column name="temp_14_fu_185_p3">select, 0, 0, 32, 1, 32</column>
+<column name="temp_15_fu_199_p3">select, 0, 0, 32, 1, 32</column>
+<column name="temp_16_fu_219_p3">select, 0, 0, 32, 1, 32</column>
+<column name="temp_17_fu_233_p3">select, 0, 0, 32, 1, 32</column>
+<column name="temp_18_fu_247_p3">select, 0, 0, 32, 1, 32</column>
+<column name="ap_enable_pp0">xor, 0, 0, 2, 1, 2</column>
+<column name="xor_ln847_fu_153_p2">xor, 0, 0, 2, 1, 2</column>
+</table>
+</item>
+<item name = "Multiplexer"><table name="" hasTotal="1">
+<keys size="5">Name, LUT, Input Size, Bits, Total Bits</keys>
+<column name="ap_done_int">9, 2, 1, 2</column>
+<column name="ap_enable_reg_pp0_iter1">9, 2, 1, 2</column>
+<column name="ap_return_0">9, 2, 24, 48</column>
+<column name="ap_return_1">9, 2, 24, 48</column>
+<column name="ap_return_2">9, 2, 24, 48</column>
+<column name="ap_return_3">9, 2, 24, 48</column>
+<column name="ap_return_4">9, 2, 24, 48</column>
+<column name="ap_return_5">9, 2, 24, 48</column>
+<column name="ap_sig_allocacmp_i_1">9, 2, 3, 6</column>
+<column name="ap_sig_allocacmp_temp_10_load">9, 2, 32, 64</column>
+<column name="ap_sig_allocacmp_temp_11_load">9, 2, 32, 64</column>
+<column name="ap_sig_allocacmp_temp_12_load">9, 2, 32, 64</column>
+<column name="ap_sig_allocacmp_temp_7_load">9, 2, 32, 64</column>
+<column name="ap_sig_allocacmp_temp_8_load">9, 2, 32, 64</column>
+<column name="ap_sig_allocacmp_temp_9_load">9, 2, 32, 64</column>
+<column name="i_fu_44">9, 2, 3, 6</column>
+</table>
+</item>
+<item name = "Register"><table name="" hasTotal="1">
+<keys size="5">Name, FF, LUT, Bits, Const Bits</keys>
+<column name="ap_CS_fsm">1, 0, 1, 0</column>
+<column name="ap_done_reg">1, 0, 1, 0</column>
+<column name="ap_enable_reg_pp0_iter1">1, 0, 1, 0</column>
+<column name="ap_return_0_preg">24, 0, 24, 0</column>
+<column name="ap_return_1_preg">24, 0, 24, 0</column>
+<column name="ap_return_2_preg">24, 0, 24, 0</column>
+<column name="ap_return_3_preg">24, 0, 24, 0</column>
+<column name="ap_return_4_preg">24, 0, 24, 0</column>
+<column name="ap_return_5_preg">24, 0, 24, 0</column>
+<column name="i_1_reg_412">3, 0, 3, 0</column>
+<column name="i_fu_44">3, 0, 3, 0</column>
+<column name="temp_10_fu_60">32, 0, 32, 0</column>
+<column name="temp_11_fu_64">32, 0, 32, 0</column>
+<column name="temp_12_fu_68">32, 0, 32, 0</column>
+<column name="temp_7_fu_48">32, 0, 32, 0</column>
+<column name="temp_8_fu_52">32, 0, 32, 0</column>
+<column name="temp_9_fu_56">32, 0, 32, 0</column>
+</table>
+</item>
+</section>
+</item>
+</section>
+
+<section name = "Interface" level="0">
+<item name = "Summary"><table name="" hasTotal="0">
+<keys size="6">RTL Ports, Dir, Bits, Protocol, Source Object, C Type</keys>
+<column name="ap_clk">in, 1, ap_ctrl_hs, v_scaler_top_Loop_VITIS_LOOP_840_1_proc, return value</column>
+<column name="ap_rst">in, 1, ap_ctrl_hs, v_scaler_top_Loop_VITIS_LOOP_840_1_proc, return value</column>
+<column name="ap_start">in, 1, ap_ctrl_hs, v_scaler_top_Loop_VITIS_LOOP_840_1_proc, return value</column>
+<column name="ap_done">out, 1, ap_ctrl_hs, v_scaler_top_Loop_VITIS_LOOP_840_1_proc, return value</column>
+<column name="ap_continue">in, 1, ap_ctrl_hs, v_scaler_top_Loop_VITIS_LOOP_840_1_proc, return value</column>
+<column name="ap_idle">out, 1, ap_ctrl_hs, v_scaler_top_Loop_VITIS_LOOP_840_1_proc, return value</column>
+<column name="ap_ready">out, 1, ap_ctrl_hs, v_scaler_top_Loop_VITIS_LOOP_840_1_proc, return value</column>
+<column name="ap_return_0">out, 24, ap_ctrl_hs, v_scaler_top_Loop_VITIS_LOOP_840_1_proc, return value</column>
+<column name="ap_return_1">out, 24, ap_ctrl_hs, v_scaler_top_Loop_VITIS_LOOP_840_1_proc, return value</column>
+<column name="ap_return_2">out, 24, ap_ctrl_hs, v_scaler_top_Loop_VITIS_LOOP_840_1_proc, return value</column>
+<column name="ap_return_3">out, 24, ap_ctrl_hs, v_scaler_top_Loop_VITIS_LOOP_840_1_proc, return value</column>
+<column name="ap_return_4">out, 24, ap_ctrl_hs, v_scaler_top_Loop_VITIS_LOOP_840_1_proc, return value</column>
+<column name="ap_return_5">out, 24, ap_ctrl_hs, v_scaler_top_Loop_VITIS_LOOP_840_1_proc, return value</column>
+<column name="params_address0">out, 3, ap_memory, params, array</column>
+<column name="params_ce0">out, 1, ap_memory, params, array</column>
+<column name="params_q0">in, 32, ap_memory, params, array</column>
+</table>
+</item>
+</section>
+</profile>

@@ -1,0 +1,18 @@
+# Vivado/Vitis build artifacts - too large for GitHub (>100MB limit)
+*.dcp
+*.xsa
+*.bit
+*.ltx
+*.mmi
+*.hwdef
+*.runs/
+**/.Xil/
+**/prj/
+**/binary_container_*/link/vivado/
+**/binary_container_*/build/
+**/_x/
+**/*.wdb
+**/*.wcfg
+**/*.xclbin
+**/*.xo
+**/*.hls/
