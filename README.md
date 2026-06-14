@@ -1,72 +1,13 @@
-# Ninox Background Research Notes
+# KV260 Workspace
 
-## People
-
-- **[ccchiang19](https://github.com/ccchiang19)**: Student in NYCU 2026
-- **[JohnsonOUO](https://github.com/JohnsonOUO)**: Student in NYCU 2026
-- **[Pm3-H](https://github.com/Pm3-H)**: 
-- **[Appaul](https://github.com/Appaul)**:
-- **[Ninox-Cyber](https://github.com/Ninox-Cyber)**:
-- **[Ninox-Cybersecurity](https://github.com/Ninox-Cybersecurity)**:
+> Personal workspace documenting the full development, deployment, and orchestration pipeline for the **Xilinx Kria KV260** edge AI platform — covering Yocto-based Linux image builds, hardware overlay configuration, AI model compilation, Kubernetes/KubeEdge cluster setup, and remote management tooling.
 
 ---
 
-## Repositories
-
-### [ninox-cybersecurity.github.io](https://github.com/NinoX-Cybersecurity/ninox-cybersecurity.github.io)
-- **Date**: May 5, 2021
-- **Forked from**: [varadbhogayata.github.io](https://varadbhogayata.github.io/) (Original Author)
-- **Preview**: [ninox-cybersecurity.github.io](https://ninox-cybersecurity.github.io/)
-- **Contributors**:
-  - [huangpen](https://github.com/huangpen)
-  - NinoX-Cybersecurity
-  - [varadbhogayata](https://github.com/varadbhogayata) (Original Author)
+**Maintainer**: Steven Pratama — [@syvesdh](https://github.com/syvesdh)
+**Last Updated**: June 2026
 
 ---
-
-### [yocto-xilinx](https://github.com/n1n0x-MI4PLC/yocto-xilinx)
-- **Date**: Feb 1, 2023
-- **Summary**: Step-by-step guide for using the Yocto Project (Poky) to build a custom Linux image utilizing Xilinx layers for the Kria KV260 development board. It details the necessary meta-layer dependencies (such as `meta-xilinx`, `meta-petalinux`, and `meta-ros`), explains how to configure the build environment by modifying the `bblayer.conf` and `local.conf` files, and outlines the compilation process using the `bitbake` command. Furthermore, the repository provides two methods for packaging and flashing the resulting compiled image onto an SD card (using either Gparted for manual partitioning or balenaEtcher), and concludes with post-installation notes covering default credentials, network configuration, Proxmox access, and Talos Kubernetes deployment.
-- **Contributors**:
-  - [ccchiang19](https://github.com/ccchiang19)
-  - NinoX-Cyber
-
----
-
-### [kv260-smartplatform](https://github.com/n1n0x-MI4PLC/kv260-smartplatform)
-- **Date**: Dec 1, 2022
-- **Summary**: The `n1n0x-MI4PLC/kv260-smartplatform` repository serves as an end-to-end guide and codebase for deploying a hardware-accelerated, AI-powered smart camera application on the Xilinx Kria KV260 development board. It provides a complete workflow utilizing Vitis and PetaLinux (version 2022.1) to build a custom operating system equipped with edge machine learning capabilities.
-
-#### Key Phases of the Workflow:
-- **Environment & Platform Setup**: Detailed instructions for installing Vitis and PetaLinux, followed by building a custom Vitis Extensible Platform (`kv260_ispMipiRx_vcu_DP`).
-- **Hardware Overlay & DPU Configuration**: Integrating the Vitis Video Analytics SDK (VVAS) to configure and compile the Deep Learning Processor Unit (DPU) overlay, generating the necessary bitstreams and `.xclbin` files.
-- **OS Customization**: Using PetaLinux to create a custom Linux image based on an official Xilinx BSP. This includes injecting custom Yocto/BitBake recipes to handle firmware, network configurations, and application dependencies.
-- **AI Model Compilation**: Leveraging a Vitis-AI Docker container to compile pre-trained models (specifically YOLOv3 and a face mask detection model) into formats compatible with the edge hardware.
-- **Application Deployment**: Packaging the OS into a bootable SD card image and running a GStreamer-based application. The project concludes with instructions on using the `xmutil` utility to dynamically load the custom application and interact with a visual front-end interface to test the AI models.
-- **Contributors**:
-  - Appaul
-  - [huangpen](https://github.com/huangpen)
-
----
-
-### [smartapp-modified](https://github.com/n1n0x-MI4PLC/smartapp-modified)
-- **Date**: Dec 1, 2022
-- **Summary**: The `n1n0x-MI4PLC/smartapp-modified` repository builds upon previous Kria KV260 projects by introducing a socket-based client-server architecture managed via a K3s Kubernetes cluster. Its primary goal is to enable developers to remotely manage hardware configurations and deploy AI models to the KV260 edge device over a local network.
-
-#### Key Architecture and Features:
-- **Cluster Topology**: The K3s cluster consists of a Master Node (an Ubuntu VM hosted on Proxmox) and a Worker Node (the KV260 development board running PetaLinux).
-
-- **Socket Servers**: The system distributes its workload across three Python-based socket servers:
-  - **Vitis-AI Server**: Runs as a pod on the Master Node to handle heavy lifting, such as AI model quantization and compilation.
-  - **Xmutil Server**: Runs as a pod on the KV260 to remotely load and unload hardware bitstreams.
-  - **Application Server**: Runs directly on the KV260 (bare-metal) to execute the smart camera/model selection applications.
-  
-- **Command Line Interface (`ninoctl`)**: A custom, Docker-containerized CLI tool written in Go. This acts as the control hub, allowing users to issue remote commands to quantize, compile, and deploy models, swap bitstreams, or trigger edge applications directly from their laptop.
-
-- **Contributors**:
-  - [Pm3-H](https://github.com/Pm3-H)
-  - [huangpen](https://github.com/huangpen)
-  - [JohnsonOUO](https://github.com/JohnsonOUO)
 
 #### Directory Structure and Submodule Analysis
 
