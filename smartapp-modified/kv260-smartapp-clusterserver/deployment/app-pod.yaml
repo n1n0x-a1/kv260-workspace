@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: camera-app
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      name: camera-app-backend
+  template:
+    metadata:
+      labels:
+        name: camera-app-backend
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        node-role.kubernetes.io/edge: ""
+      containers:
+        - name: camera-app
+          image: chriskewis/kv260-xmutil
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+          command: ["python3", "/opt/xilinx/kv260-vvas-sms/app/app-server.py"]
+          volumeMounts:
+          - mountPath: /dev
+            name: dev-dir
+          - mountPath: /sys
+            name: sys-fs
+          - mountPath: /config
+            name: config-fs
+          - mountPath: /opt/xilinx
+            name: xilinx-libs
+          - mountPath: /tmp
+            name: tmp-dir
+      volumes:
+      - name: dev-dir
+        hostPath:
+          path: /dev
+          type: Directory
+      - name: sys-fs
+        hostPath:
+          path: /sys
+          type: Directory
+      - name: config-fs
+        hostPath:
+          path: /config
+          type: Directory
+      - name: xilinx-libs
+        hostPath:
+          path: /opt/xilinx
+          type: Directory
+      - name: tmp-dir
+        hostPath:
+          path: /tmp
+          type: Directory
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: camera-app-service
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8084
+      protocol: TCP
+      targetPort: 8084
+  selector:
+    name: camera-app-backend

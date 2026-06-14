@@ -1,0 +1,100 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vitis
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      name: vitis-backend
+  template:
+    metadata:
+      labels:
+        name: vitis-backend
+    spec:
+      hostNetwork: true
+      containers:
+        - name: backend
+          image: pm3h/x-vitis-ai:2.5.4
+          imagePullPolicy: Always
+          command: ["python3","/home/server/vitis-server.py"]
+          ports:
+            - containerPort: 8082
+          volumeMounts:
+          - mountPath: /dev/shm
+            name: shm
+          - mountPath: /opt/xilinx/dsa
+            name: dsa
+          - mountPath: /opt/xilinx/overlaybins
+            name: overlay
+          - mountPath: /vitis_ai_home
+            name: vitis
+          - mountPath: /home/workspace
+            name: work
+          - mountPath: /home/server/vitis-server.py
+            name: pyserver
+      volumes:
+      - name: shm
+        hostPath:
+          path: /dev/shm
+          type: Directory
+      - name: dsa
+        hostPath:
+          path: /opt/xilinx/dsa
+          type: Directory
+      - name: overlay
+        hostPath:
+          path: /opt/xilinx/overlaybins
+          type: Directory
+      - name: vitis
+        hostPath:
+          path: /home/k8s/path2vitisai
+          type: Directory
+      - name: work
+        hostPath:
+          path: /home/k8s/path2vitisai
+          type: Directory
+      - name: pyserver
+        hostPath:
+          path: /home/k8s/vitis-server.py
+          type: File
+      nodeSelector:
+        kubernetes.io/hostname: master
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          effect: NoSchedule
+          operator: Exists
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vitis-service
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8082
+      protocol: TCP
+      targetPort: 82
+  selector:
+    name: vitis-backend
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: vitis-route
+  namespace: default
+spec:
+  parentRefs:
+    - name: ninox-gateway
+      namespace: envoy-gateway-system
+      sectionName: https
+  hostnames:
+    - vitis-ai.ninox.com
+  rules:
+    - backendRefs:
+        - name: vitis-service
+          port: 8082
+

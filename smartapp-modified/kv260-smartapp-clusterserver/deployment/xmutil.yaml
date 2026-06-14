@@ -1,0 +1,106 @@
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xmutil-app
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      name: xmutil-backend
+  template:
+    metadata:
+      labels:
+        name: xmutil-backend
+    spec:
+      hostNetwork: true
+      containers:
+        - name: xmutil
+          image: chriskewis/kv260-xmutil
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+          resources:
+          command: ["python3", "/home/xmutil/xmutil-server.py"]
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+          - mountPath: /home/xmutil
+            name: xmutil
+          - mountPath: /opt
+            name: video
+          - mountPath: /tmp
+            name: dfx
+          - mountPath: /sys
+            name: sys-fs
+          - mountPath: /config
+            name: config-fs
+          - mountPath: /lib/firmware
+            name: firmware
+          - mountPath: /usr/lib/libdfx.so.1.0
+            name: libdfx
+      volumes:
+      - name: video
+        hostPath:
+          path: /opt
+          type: Directory
+      - name: dfx
+        hostPath:
+          path: /tmp
+          type: Directory
+      - name: xmutil
+        hostPath:
+          path: /home/petalinux
+          type: Directory
+      - name: sys-fs
+        hostPath:
+          path: /sys
+          type: Directory
+      - name: config-fs
+        hostPath:
+          path: /config
+          type: Directory
+      - name: firmware
+        hostPath:
+          path: /lib/firmware
+          type: Directory
+      - name: libdfx
+        hostPath:
+          path: /usr/lib/libdfx.so.1.0
+          type: File
+      nodeSelector:
+        node-role.kubernetes.io/edge: ""
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: xmutil-service
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 80
+  selector:
+    name: xmutil-backend
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: xmutil-route
+  namespace: default
+spec:
+  parentRefs:
+    - name: ninox-gateway
+      namespace: envoy-gateway-system
+      sectionName: https
+  hostnames:
+    - kv260-xmutil.ninox.com
+  rules:
+    - backendRefs:
+        - name: xmutil-service
+          port: 8080
+
