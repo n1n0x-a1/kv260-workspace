@@ -7,6 +7,23 @@
 **Maintainer**: Steven Pratama — [@syvesdh](https://github.com/syvesdh)
 **Last Updated**: June 2026
 
+### SSH Access Quick Start
+
+To connect to the KV260 board via SSH, ensure it is booted and connected to your network, then run:
+
+```bash
+ssh root@<kv260-ip-address>
+```
+
+> [!NOTE]
+> * **Default Username**: `root`
+> * **Password**: Passwordless login is configured by default for the `root` user in this environment.
+> * **Manual SSH Daemon Start**: If the connection is refused, the SSH daemon might not be running. Log in via the board's serial console first and start it with:
+>   ```bash
+>   /etc/init.d/sshd start
+>   ```
+> * **Troubleshooting / Key Recovery**: If you are locked out or need to install an authorized public key, see [Section 5.6: Troubleshooting: Restoring KV260 SSH Access](#56-troubleshooting-restoring-kv260-ssh-access-native-compilation-and-symlinking) for detailed host-root mounting instructions.
+
 ---
 
 #### Directory Structure and Submodule Analysis
