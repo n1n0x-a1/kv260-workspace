@@ -39,7 +39,7 @@
 // | `define B4096                 
 // |------------------------------------------------------|
 
-`define B4096
+`define B3136
 
 // |------------------------------------------------------|
 // | If the FPGA has Uram. You can define URAM_EN parameter               
@@ -146,17 +146,6 @@
 
 `define ALU_RELU_RELU6
 
-// |------------------------------------------------------|
-// | argmax or max Configuration
-// | It relates to model. if change, must update model
-// +------------------------------------------------------+
-// | enable  : `define SAVE_ARGMAX_ENABLE                 
-// +------------------------------------------------------+
-// | disable : `define SAVE_ARGMAX_DISABLE                 
-// |------------------------------------------------------|
-
-`define SAVE_ARGMAX_ENABLE                
- 
 // |------------------------------------------------------|
 // | DSP48 Usage Configuration  
 // | Use dsp replace of lut in conv operate 

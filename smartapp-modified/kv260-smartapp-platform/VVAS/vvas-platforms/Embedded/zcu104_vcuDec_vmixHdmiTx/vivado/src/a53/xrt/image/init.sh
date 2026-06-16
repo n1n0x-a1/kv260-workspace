@@ -49,8 +49,7 @@ cp dpu.xclbin /usr/lib/
 /sbin/devmem 0xfd3b0018 32 0x7
 /sbin/devmem 0xfd3b001c 32 0x0
 ########################################################################
- # Copyright 2020 - 2022 Xilinx, Inc.
- # Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
+ # Copyright 2020 Xilinx, Inc.
  #
  # Licensed under the Apache License, Version 2.0 (the "License");
  # you may not use this file except in compliance with the License.

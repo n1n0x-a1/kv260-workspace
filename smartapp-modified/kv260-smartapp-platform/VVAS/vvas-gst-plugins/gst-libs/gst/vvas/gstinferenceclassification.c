@@ -66,29 +66,29 @@ classification_reset (GstInferenceClassification * self)
 {
   g_return_if_fail (self);
 
-  self->classification.classification_id = get_new_id ();
-  self->classification.class_id = DEFAULT_CLASS_ID;
-  self->classification.class_prob = DEFAULT_CLASS_PROB;
-  self->classification.num_classes = DEFAULT_NUM_CLASSES;
-  self->classification.label_color.red = 0;
-  self->classification.label_color.green = 0;
-  self->classification.label_color.blue = 0;
-  self->classification.label_color.alpha = 0;
+  self->classification_id = get_new_id ();
+  self->class_id = DEFAULT_CLASS_ID;
+  self->class_prob = DEFAULT_CLASS_PROB;
+  self->num_classes = DEFAULT_NUM_CLASSES;
+  self->label_color.red = 0;
+  self->label_color.green = 0;
+  self->label_color.blue = 0;
+  self->label_color.alpha = 0;
 
-  if (self->classification.class_label) {
-    g_free (self->classification.class_label);
+  if (self->class_label) {
+    g_free (self->class_label);
   }
-  self->classification.class_label = DEFAULT_CLASS_LABEL;
+  self->class_label = DEFAULT_CLASS_LABEL;
 
-  if (self->classification.probabilities) {
-    g_free (self->classification.probabilities);
+  if (self->probabilities) {
+    g_free (self->probabilities);
   }
-  self->classification.probabilities = DEFAULT_PROBABILITIES;
+  self->probabilities = DEFAULT_PROBABILITIES;
 
-  if (self->classification.labels) {
-    g_strfreev (self->classification.labels);
+  if (self->labels) {
+    g_strfreev (self->labels);
   }
-  self->classification.labels = DEFAULT_LABELS;
+  self->labels = DEFAULT_LABELS;
 }
 
 GstInferenceClassification *
@@ -103,9 +103,9 @@ gst_inference_classification_new (void)
 
   g_mutex_init (&self->mutex);
 
-  self->classification.class_label = NULL;
-  self->classification.probabilities = NULL;
-  self->classification.labels = NULL;
+  self->class_label = NULL;
+  self->probabilities = NULL;
+  self->labels = NULL;
 
   classification_reset (self);
 
@@ -132,34 +132,33 @@ probabilities_copy (const gdouble * from, gint num_classes)
 GstInferenceClassification *
 gst_inference_classification_new_full (gint class_id, gdouble class_prob,
     const gchar * class_label, gint num_classes, const gdouble * probabilities,
-    gchar ** labels, VvasColorMetadata * label_color)
+    gchar ** labels, VvasColorMetadata *label_color)
 {
   GstInferenceClassification *self = gst_inference_classification_new ();
 
   GST_INFERENCE_CLASSIFICATION_LOCK (self);
 
-  self->classification.class_id = class_id;
-  self->classification.class_prob = class_prob;
-  self->classification.num_classes = num_classes;
+  self->class_id = class_id;
+  self->class_prob = class_prob;
+  self->num_classes = num_classes;
 
   if (class_label) {
-    self->classification.class_label = g_strdup (class_label);
+    self->class_label = g_strdup (class_label);
   }
 
   if (probabilities && num_classes > 0) {
-    self->classification.probabilities =
-        probabilities_copy (probabilities, num_classes);
+    self->probabilities = probabilities_copy (probabilities, num_classes);
   }
 
   if (labels) {
-    self->classification.labels = g_strdupv (labels);
+    self->labels = g_strdupv (labels);
   }
 
   if (label_color) {
-    self->classification.label_color.red = label_color->red;
-    self->classification.label_color.green = label_color->green;
-    self->classification.label_color.blue = label_color->blue;
-    self->classification.label_color.alpha = label_color->alpha;
+    self->label_color.red = label_color->red;
+    self->label_color.green = label_color->green;
+    self->label_color.blue = label_color->blue;
+    self->label_color.alpha = label_color->alpha;
   }
 
   GST_INFERENCE_CLASSIFICATION_UNLOCK (self);
@@ -195,32 +194,26 @@ gst_inference_classification_copy (const GstInferenceClassification * self)
 
   GST_INFERENCE_CLASSIFICATION_LOCK ((GstInferenceClassification *) self);
 
-  other->classification.classification_id =
-      self->classification.classification_id;
-  other->classification.class_id = self->classification.class_id;
-  other->classification.class_prob = self->classification.class_prob;
-  other->classification.num_classes = self->classification.num_classes;
-  other->classification.label_color.red = self->classification.label_color.red;
-  other->classification.label_color.green =
-      self->classification.label_color.green;
-  other->classification.label_color.blue =
-      self->classification.label_color.blue;
-  other->classification.label_color.alpha =
-      self->classification.label_color.alpha;
+  other->classification_id = self->classification_id;
+  other->class_id = self->class_id;
+  other->class_prob = self->class_prob;
+  other->num_classes = self->num_classes;
+  other->label_color.red = self->label_color.red;
+  other->label_color.green = self->label_color.green;
+  other->label_color.blue = self->label_color.blue;
+  other->label_color.alpha = self->label_color.alpha;
 
-  if (self->classification.class_label) {
-    other->classification.class_label =
-        g_strdup (self->classification.class_label);
+  if (self->class_label) {
+    other->class_label = g_strdup (self->class_label);
   }
 
-  if (self->classification.probabilities) {
-    other->classification.probabilities =
-        probabilities_copy (self->classification.probabilities,
-        self->classification.num_classes);
+  if (self->probabilities) {
+    other->probabilities =
+        probabilities_copy (self->probabilities, self->num_classes);
   }
 
-  if (self->classification.labels) {
-    other->classification.labels = g_strdupv (self->classification.labels);
+  if (self->labels) {
+    other->labels = g_strdupv (self->labels);
   }
 
   GST_INFERENCE_CLASSIFICATION_UNLOCK ((GstInferenceClassification *) self);
@@ -246,11 +239,10 @@ gst_inference_classification_to_string (GstInferenceClassification * self,
       "%*s  Probability : %f\n"
       "%*s  Classes : %d\n"
       "%*s}",
-      indent, "", self->classification.classification_id,
-      indent, "", self->classification.class_id,
-      indent, "", self->classification.class_label,
-      indent, "", self->classification.class_prob, indent, "",
-      self->classification.num_classes, indent, "");
+      indent, "", self->classification_id,
+      indent, "", self->class_id,
+      indent, "", self->class_label,
+      indent, "", self->class_prob, indent, "", self->num_classes, indent, "");
 
   GST_INFERENCE_CLASSIFICATION_UNLOCK (self);
 
@@ -263,5 +255,5 @@ classification_free (GstInferenceClassification * self)
   classification_reset (self);
 
   g_mutex_clear (&self->mutex);
-  g_slice_free (GstInferenceClassification, self);
+  g_slice_free(GstInferenceClassification, self);
 }

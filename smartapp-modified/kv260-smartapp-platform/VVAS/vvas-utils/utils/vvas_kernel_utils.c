@@ -1,6 +1,5 @@
 /*
- * Copyright 2020 - 2022 Xilinx, Inc.
- * Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
+ * Copyright 2020 Xilinx, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +16,7 @@
 
 /* Update of this file by the user is not encouraged */
 #include <vvas/vvas_kernel.h>
-#include <vvas_core/vvas_device.h>
+#include <xrt_utils.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -123,6 +122,7 @@ vvas_alloc_buffer (VVASKernel * handle, uint32_t size, VVASMemoryType mem_type,
 error:
   if (frame) {
     vvas_free_buffer (handle, frame);
+    free (frame);
   }
   return NULL;
 }
@@ -131,6 +131,11 @@ void
 vvas_free_buffer (VVASKernel * handle, VVASFrame * vvas_frame)
 {
   xrt_buffer buffer;
+
+  if (!handle) {
+    LOG_MESSAGE (LOG_LEVEL_ERROR, "invalid arguments : handle %p", handle);
+    return;
+  }
 
   if (!vvas_frame) {
     LOG_MESSAGE (LOG_LEVEL_ERROR, "invalid arguments : vvas_frame  %p",
@@ -143,7 +148,7 @@ vvas_free_buffer (VVASKernel * handle, VVASFrame * vvas_frame)
     buffer.bo = vvas_frame->bo[0];
     buffer.size = vvas_frame->size[0];
     vvas_xrt_free_xrt_buffer (&buffer);
-  } else if (handle) {
+  } else {
     if (!handle->free_func) {
       LOG_MESSAGE (LOG_LEVEL_ERROR,
           "app did not set free_func callback function");
@@ -211,7 +216,6 @@ vvas_kernel_start (VVASKernel * handle, const char *format, ...)
   if (vvas_xrt_exec_buf (handle->dev_handle, handle->kern_handle,
           &handle->run_handle, format, args)) {
     LOG_MESSAGE (LOG_LEVEL_ERROR, "failed to issue XRT command");
-    va_end (args);
     return -1;
   }
   LOG_MESSAGE (LOG_LEVEL_DEBUG, "Submitted command to kernel");
@@ -351,14 +355,12 @@ unsigned int
 vvas_caps_get_stride_align (VVASKernel * handle, paddir dir)
 {
   if (!handle->padinfo)
-    return 1;
+    return 0;
   else {
     if (dir == SINK)
-      return handle->padinfo->sinkpad_align.stride_align ? handle->
-          padinfo->sinkpad_align.stride_align : 1;
+      return handle->padinfo->sinkpad_align.stride_align;
     else
-      return handle->padinfo->srcpad_align.stride_align ? handle->
-          padinfo->srcpad_align.stride_align : 1;
+      return handle->padinfo->srcpad_align.stride_align;
   }
 }
 
@@ -406,14 +408,12 @@ unsigned int
 vvas_caps_get_height_align (VVASKernel * handle, paddir dir)
 {
   if (!handle->padinfo)
-    return 1;
+    return 0;
   else {
     if (dir == SINK)
-      return handle->padinfo->sinkpad_align.height_align ? handle->
-          padinfo->sinkpad_align.height_align : 1;
+      return handle->padinfo->sinkpad_align.height_align;
     else
-      return handle->padinfo->srcpad_align.height_align ? handle->
-          padinfo->srcpad_align.height_align : 1;
+      return handle->padinfo->srcpad_align.height_align;
   }
 }
 

@@ -72,24 +72,36 @@ static GstInferenceClassification
     * classification_copy (GstInferenceClassification * from, gpointer data);
 static void classification_merge (GList * src, GList ** dst);
 static gint classification_compare (gconstpointer a, gconstpointer b);
-static void segmentation_copy (const GstInferencePrediction * self,
-    GstInferencePrediction * other);
-static void reid_copy (const GstInferencePrediction * self,
-    GstInferencePrediction * other);
+static void segmentation_copy (const GstInferencePrediction *self, GstInferencePrediction *other);
 
-static void bounding_box_reset (VvasBoundingBox * bbox);
-static gchar *bounding_box_to_string (VvasBoundingBox * bbox, gint level);
+static void bounding_box_reset (BoundingBox * bbox);
+static gchar *bounding_box_to_string (BoundingBox * bbox, gint level);
 
-static void node_get_children (VvasTreeNode * node, gpointer data);
+static void node_get_children (GNode * node, gpointer data);
 static gpointer node_copy (gconstpointer node, gpointer data);
-static gboolean node_scale_ip (VvasTreeNode * node, gpointer data);
+static gboolean node_scale_ip (GNode * node, gpointer data);
 static gpointer node_scale (gconstpointer, gpointer data);
-static gboolean node_assign (VvasTreeNode * node, gpointer data);
-static gboolean node_find (VvasTreeNode * node, gpointer data);
-static gboolean node_get_enabled (VvasTreeNode * node, gpointer data);
+static gboolean node_assign (GNode * node, gpointer data);
+static gboolean node_find (GNode * node, gpointer data);
+static gboolean node_get_enabled (GNode * node, gpointer data);
 
 static void compute_factors (GstVideoInfo * from, GstVideoInfo * to,
     gdouble * hfactor, gdouble * vfactor);
+static guint64 get_new_id (void);
+
+static guint64
+get_new_id (void)
+{
+  static guint64 _id = G_GUINT64_CONSTANT (0);
+  static GMutex _id_mutex;
+  static guint64 ret = 0;
+
+  g_mutex_lock (&_id_mutex);
+  ret = _id++;
+  g_mutex_unlock (&_id_mutex);
+
+  return ret;
+}
 
 GstInferencePrediction *
 gst_inference_prediction_new (void)
@@ -103,15 +115,11 @@ gst_inference_prediction_new (void)
 
   g_mutex_init (&self->mutex);
 
-  self->prediction.node = NULL;
-  self->prediction.classifications = NULL;
+  self->predictions = NULL;
+  self->classifications = NULL;
   self->sub_buffer = NULL;
-  self->prediction.segmentation.data = NULL;
-  self->prediction.reid.data = NULL;
-  self->prediction.obj_track_label = NULL;
-  self->prediction.model_name = NULL;
-  self->prediction.model_class = VVAS_XCLASS_NOTFOUND;
-  self->prediction.tb = NULL;
+  self->segmentation.buffer = NULL;
+  self->obj_track_label = NULL;
 
   prediction_reset (self);
 
@@ -119,7 +127,7 @@ gst_inference_prediction_new (void)
 }
 
 GstInferencePrediction *
-gst_inference_prediction_new_full (VvasBoundingBox * bbox)
+gst_inference_prediction_new_full (BoundingBox * bbox)
 {
   GstInferencePrediction *self = NULL;
 
@@ -128,7 +136,7 @@ gst_inference_prediction_new_full (VvasBoundingBox * bbox)
   self = gst_inference_prediction_new ();
 
   GST_INFERENCE_PREDICTION_LOCK (self);
-  self->prediction.bbox = *bbox;
+  self->bbox = *bbox;
   GST_INFERENCE_PREDICTION_UNLOCK (self);
 
   return self;
@@ -160,7 +168,7 @@ gst_inference_prediction_append (GstInferencePrediction * self,
 
   GST_INFERENCE_PREDICTION_LOCK (self);
   GST_INFERENCE_PREDICTION_LOCK (child);
-  vvas_treenode_append (self->prediction.node, child->prediction.node);
+  g_node_append (self->predictions, child->predictions);
   GST_INFERENCE_PREDICTION_UNLOCK (child);
   GST_INFERENCE_PREDICTION_UNLOCK (self);
 }
@@ -172,28 +180,19 @@ classification_copy (GstInferenceClassification * from, gpointer data)
 }
 
 static void
-reid_copy (const GstInferencePrediction * self, GstInferencePrediction * other)
+segmentation_copy (const GstInferencePrediction *self, GstInferencePrediction *other)
 {
-  if (self->prediction.reid.copy)
-    self->prediction.reid.copy (&self->prediction.reid,
-        &other->prediction.reid);
-}
+  int i;
+  int sizeoffmt = sizeof(self->segmentation.fmt) /
+	  sizeof(self->segmentation.fmt[0]);
 
-static void
-segmentation_copy (const GstInferencePrediction * self,
-    GstInferencePrediction * other)
-{
-  if (self->prediction.segmentation.copy)
-    self->prediction.segmentation.copy (&self->prediction.segmentation,
-        &other->prediction.segmentation);
-}
-
-static void
-tb_copy (const GstInferencePrediction * self, GstInferencePrediction * other)
-{
-  if (self->prediction.tb->copy)
-    self->prediction.tb->copy ((void **) &self->prediction.tb,
-        (void **) &other->prediction.tb);
+    other->segmentation.type = self->segmentation.type;
+    other->segmentation.width = self->segmentation.width;
+    other->segmentation.height = self->segmentation.height;
+    for(i=0; i < sizeoffmt; i++)
+      other->segmentation.fmt[i] = self->segmentation.fmt[i];
+    other->segmentation.data = self->segmentation.data;
+    other->segmentation.buffer = gst_buffer_ref(self->segmentation.buffer);
 }
 
 static GstInferencePrediction *
@@ -205,29 +204,17 @@ prediction_copy (const GstInferencePrediction * self)
 
   other = gst_inference_prediction_new ();
 
-  other->prediction.prediction_id = self->prediction.prediction_id;
-  other->prediction.enabled = self->prediction.enabled;
-  other->prediction.bbox = self->prediction.bbox;
-  other->prediction.model_class = self->prediction.model_class;
-  other->prediction.count = self->prediction.count;
-  other->prediction.pose14pt = self->prediction.pose14pt;
-  other->prediction.feature = self->prediction.feature;
+  other->prediction_id = self->prediction_id;
+  other->enabled = self->enabled;
+  other->bbox = self->bbox;
 
   if (self->sub_buffer != NULL)
-    other->sub_buffer = gst_buffer_ref (self->sub_buffer);
-  if (self->prediction.segmentation.data != NULL)
+    other->sub_buffer = gst_buffer_ref(self->sub_buffer);
+  if (self->segmentation.buffer != NULL)
     segmentation_copy (self, other);
-  if (self->prediction.reid.data != NULL)
-    reid_copy (self, other);
-  if (self->prediction.tb != NULL)
-    tb_copy (self, other);
 
-  if (self->prediction.obj_track_label)
-    other->prediction.obj_track_label =
-        g_strdup (self->prediction.obj_track_label);
-
-  if (self->prediction.model_name)
-    other->prediction.model_name = g_strdup (self->prediction.model_name);
+  if (self->obj_track_label)
+    other->obj_track_label = g_strdup (self->obj_track_label);
 
   other->reserved_1 = self->reserved_1;
   other->reserved_2 = self->reserved_2;
@@ -235,9 +222,9 @@ prediction_copy (const GstInferencePrediction * self)
   other->reserved_4 = self->reserved_4;
   other->reserved_5 = self->reserved_5;
 
-  other->prediction.classifications =
-      vvas_list_copy_deep (self->prediction.classifications,
-      (vvas_list_copy_func) classification_copy, NULL);
+  other->classifications =
+      g_list_copy_deep (self->classifications, (GCopyFunc) classification_copy,
+      NULL);
 
   return other;
 }
@@ -253,18 +240,18 @@ node_copy (gconstpointer node, gpointer data)
 }
 
 static gboolean
-node_assign (VvasTreeNode * node, gpointer data)
+node_assign (GNode * node, gpointer data)
 {
   GstInferencePrediction *pred = (GstInferencePrediction *) node->data;
 
   g_return_val_if_fail (node, FALSE);
 
-  if (pred->prediction.node) {
-    vvas_treenode_destroy (pred->prediction.node);
-    pred->prediction.node = NULL;
+  if (pred->predictions) {
+    g_node_destroy (pred->predictions);
+    pred->predictions = NULL;
   }
 
-  pred->prediction.node = node;
+  pred->predictions = node;
 
   return FALSE;
 }
@@ -272,18 +259,17 @@ node_assign (VvasTreeNode * node, gpointer data)
 GstInferencePrediction *
 gst_inference_prediction_copy (const GstInferencePrediction * self)
 {
-  VvasTreeNode *other = NULL;
+  GNode *other = NULL;
 
   g_return_val_if_fail (self, NULL);
 
   GST_INFERENCE_PREDICTION_LOCK ((GstInferencePrediction *) self);
 
   /* Copy the binary tree */
-  other = vvas_treenode_copy_deep (self->prediction.node, node_copy, NULL);
+  other = g_node_copy_deep (self->predictions, node_copy, NULL);
 
   /* Now finish assigning the nodes to the predictions */
-  vvas_treenode_traverse (other, IN_ORDER, TRAVERSE_ALL, -1,
-      (vvas_treenode_traverse_func) node_assign, NULL);
+  g_node_traverse (other, G_IN_ORDER, G_TRAVERSE_ALL, -1, node_assign, NULL);
 
   GST_INFERENCE_PREDICTION_UNLOCK ((GstInferencePrediction *) self);
 
@@ -291,7 +277,7 @@ gst_inference_prediction_copy (const GstInferencePrediction * self)
 }
 
 static gchar *
-bounding_box_to_string (VvasBoundingBox * bbox, gint level)
+bounding_box_to_string (BoundingBox * bbox, gint level)
 {
   gint indent = level * 2;
 
@@ -346,8 +332,7 @@ prediction_classes_to_string (GstInferencePrediction * self, gint level)
   /* Build the classes for this predictions using a GString */
   string = g_string_new (NULL);
 
-  for (iter = (GList *) self->prediction.classifications; iter != NULL;
-      iter = (GList *) g_list_next (iter)) {
+  for (iter = self->classifications; iter != NULL; iter = g_list_next (iter)) {
     GstInferenceClassification *c = (GstInferenceClassification *) iter->data;
     gchar *sclass = gst_inference_classification_to_string (c, level + 1);
 
@@ -369,7 +354,7 @@ prediction_to_string (GstInferencePrediction * self, gint level)
 
   g_return_val_if_fail (self, NULL);
 
-  bbox = bounding_box_to_string (&self->prediction.bbox, level + 1);
+  bbox = bounding_box_to_string (&self->bbox, level + 1);
   classes = prediction_classes_to_string (self, level + 1);
   children = prediction_children_to_string (self, level + 1);
 
@@ -385,10 +370,10 @@ prediction_to_string (GstInferencePrediction * self, gint level)
       "%*s    %s\n"
       "%*s  ]\n"
       "%*s}",
-      indent, "", self->prediction.prediction_id,
-      indent, "", self->prediction.enabled ? "True" : "False",
+      indent, "", self->prediction_id,
+      indent, "", self->enabled ? "True" : "False",
       indent, "", bbox,
-      indent, "", self->prediction.obj_track_label,
+      indent, "", self->obj_track_label,
       indent, "", indent, "", classes, indent, "",
       indent, "", indent, "", children, indent, "", indent, "");
 
@@ -414,7 +399,7 @@ gst_inference_prediction_to_string (GstInferencePrediction * self)
 }
 
 static void
-node_get_children (VvasTreeNode * node, gpointer data)
+node_get_children (GNode * node, gpointer data)
 {
   GSList **children = (GSList **) data;
   GstInferencePrediction *prediction;
@@ -434,8 +419,8 @@ prediction_get_children_unlocked (GstInferencePrediction * self)
 
   g_return_val_if_fail (self, NULL);
 
-  if (self->prediction.node) {
-    vvas_treenode_traverse_child (self->prediction.node, TRAVERSE_ALL,
+  if (self->predictions) {
+    g_node_children_foreach (self->predictions, G_TRAVERSE_ALL,
         node_get_children, &children);
   }
 
@@ -455,15 +440,7 @@ gst_inference_prediction_get_children (GstInferencePrediction * self)
 }
 
 static void
-mem_reset (char *ptr, int size)
-{
-  g_return_if_fail (ptr);
-
-  memset (ptr, 0, size);
-}
-
-static void
-bounding_box_reset (VvasBoundingBox * bbox)
+bounding_box_reset (BoundingBox * bbox)
 {
   g_return_if_fail (bbox);
 
@@ -482,20 +459,15 @@ prediction_reset (GstInferencePrediction * self)
 {
   g_return_if_fail (self);
 
-  self->prediction.prediction_id = vvas_inferprediction_get_prediction_id ();
-  self->prediction.enabled = TRUE;
-  self->prediction.bbox_scaled = FALSE;
-  bounding_box_reset (&self->prediction.bbox);
-  self->prediction.count = 0;
-  self->prediction.model_class = VVAS_XCLASS_NOTFOUND;
-  mem_reset ((char *) &self->prediction.pose14pt, sizeof (Pose14Pt));
-  mem_reset ((char *) &self->prediction.feature, sizeof (Feature));
-  self->prediction.feature.type = UNKNOWN_FEATURE;
+  self->prediction_id = get_new_id ();
+  self->enabled = TRUE;
+  self->bbox_scaled = FALSE;
+  bounding_box_reset (&self->bbox);
 
-  /* Free all children */
+  /* Free al children */
   prediction_free (self);
 
-  self->prediction.node = vvas_treenode_new (self);
+  self->predictions = g_node_new (self);
 }
 
 static void
@@ -507,38 +479,29 @@ prediction_free (GstInferencePrediction * self)
   g_slist_free_full (children, (GDestroyNotify) gst_inference_prediction_unref);
 
   /* Now  free our classifications */
-  g_list_free_full ((GList *) self->prediction.classifications,
+  g_list_free_full (self->classifications,
       (GDestroyNotify) gst_inference_classification_unref);
-  self->prediction.classifications = NULL;
+  self->classifications = NULL;
 
-  if (self->prediction.node) {
-    vvas_treenode_destroy (self->prediction.node);
-    self->prediction.node = NULL;
+  if (self->predictions) {
+    g_node_destroy (self->predictions);
+    self->predictions = NULL;
   }
 
   if (self->sub_buffer != NULL)
     gst_buffer_unref (self->sub_buffer);
 
-  if (self->prediction.segmentation.data != NULL) {
-    self->prediction.segmentation.free (&self->prediction.segmentation);
-  }
-  if (self->prediction.reid.data && self->prediction.reid.free) {
-    self->prediction.reid.free (&self->prediction.reid);
-  }
-
-  if (self->prediction.tb) {
-    self->prediction.tb->free ((void **) &self->prediction.tb);
+  if (self->segmentation.buffer != NULL &&
+      self->segmentation.buffer->mini_object.refcount > 0) {
+      gst_buffer_unref (self->segmentation.buffer);
+      self->segmentation.buffer = NULL;
   }
 
-  if (self->prediction.obj_track_label != NULL)
-    g_free (self->prediction.obj_track_label);
-
-  if (self->prediction.model_name)
-    g_free (self->prediction.model_name);
+  if (self->obj_track_label != NULL)
+    g_free(self->obj_track_label);
 
   self->sub_buffer = NULL;
-  self->prediction.obj_track_label = NULL;
-  self->prediction.model_name = NULL;
+  self->obj_track_label = NULL;
   self->reserved_1 = NULL;
   self->reserved_2 = NULL;
   self->reserved_3 = NULL;
@@ -565,8 +528,7 @@ gst_inference_prediction_append_classification (GstInferencePrediction * self,
   g_return_if_fail (c);
 
   GST_INFERENCE_PREDICTION_LOCK (self);
-  self->prediction.classifications = (VvasList *)
-      g_list_append ((GList *) self->prediction.classifications, c);
+  self->classifications = g_list_append (self->classifications, c);
   GST_INFERENCE_PREDICTION_UNLOCK (self);
 }
 
@@ -609,19 +571,16 @@ prediction_scale (const GstInferencePrediction * self, GstVideoInfo * to,
 
   compute_factors (from, to, &hfactor, &vfactor);
 
-  dest->prediction.bbox.x = self->prediction.bbox.x * hfactor;
-  dest->prediction.bbox.y = self->prediction.bbox.y * vfactor;
+  dest->bbox.x = self->bbox.x * hfactor;
+  dest->bbox.y = self->bbox.y * vfactor;
 
-  dest->prediction.bbox.width =
-      nearbyintf (self->prediction.bbox.width * hfactor);
-  dest->prediction.bbox.height =
-      nearbyintf (self->prediction.bbox.height * vfactor);
+  dest->bbox.width = nearbyintf(self->bbox.width * hfactor);
+  dest->bbox.height = nearbyintf(self->bbox.height * vfactor);
 
   GST_LOG ("scaled bbox: %dx%d@%dx%d -> %dx%d@%dx%d",
-      self->prediction.bbox.x, self->prediction.bbox.y,
-      self->prediction.bbox.width, self->prediction.bbox.height,
-      dest->prediction.bbox.x, dest->prediction.bbox.y,
-      dest->prediction.bbox.width, dest->prediction.bbox.height);
+      self->bbox.x, self->bbox.y, self->bbox.width,
+      self->bbox.height, dest->bbox.x, dest->bbox.y,
+      dest->bbox.width, dest->bbox.height);
 
   return dest;
 }
@@ -638,15 +597,15 @@ prediction_scale_ip (GstInferencePrediction * self, GstVideoInfo * to,
 
   compute_factors (from, to, &hfactor, &vfactor);
 
-  self->prediction.bbox.x = self->prediction.bbox.x * hfactor;
-  self->prediction.bbox.y = self->prediction.bbox.y * vfactor;
+  self->bbox.x = self->bbox.x * hfactor;
+  self->bbox.y = self->bbox.y * vfactor;
 
-  self->prediction.bbox.width = self->prediction.bbox.width * hfactor;
-  self->prediction.bbox.height = self->prediction.bbox.height * vfactor;
+  self->bbox.width = self->bbox.width * hfactor;
+  self->bbox.height = self->bbox.height * vfactor;
 }
 
 static gboolean
-node_scale_ip (VvasTreeNode * node, gpointer data)
+node_scale_ip (GNode * node, gpointer data)
 {
   GstInferencePrediction *self = (GstInferencePrediction *) node->data;
   PredictionScaleData *sdata = (PredictionScaleData *) data;
@@ -677,8 +636,8 @@ gst_inference_prediction_scale_ip (GstInferencePrediction * self,
 
   GST_INFERENCE_PREDICTION_LOCK (self);
 
-  vvas_treenode_traverse (self->prediction.node, IN_ORDER, TRAVERSE_ALL, -1,
-      (vvas_treenode_traverse_func) node_scale_ip, &data);
+  g_node_traverse (self->predictions, G_IN_ORDER, G_TRAVERSE_ALL, -1,
+      node_scale_ip, &data);
 
   GST_INFERENCE_PREDICTION_UNLOCK (self);
 }
@@ -687,7 +646,7 @@ GstInferencePrediction *
 gst_inference_prediction_scale (GstInferencePrediction * self,
     GstVideoInfo * to, GstVideoInfo * from)
 {
-  VvasTreeNode *other = NULL;
+  GNode *other = NULL;
   PredictionScaleData data = {.from = from,.to = to };
 
   g_return_val_if_fail (self, NULL);
@@ -696,13 +655,10 @@ gst_inference_prediction_scale (GstInferencePrediction * self,
 
   GST_INFERENCE_PREDICTION_LOCK (self);
 
-  other =
-      vvas_treenode_copy_deep (self->prediction.node,
-      (vvas_treenode_copy_func) node_scale, &data);
+  other = g_node_copy_deep (self->predictions, node_scale, &data);
 
   /* Now finish assigning the nodes to the predictions */
-  vvas_treenode_traverse (other, IN_ORDER, TRAVERSE_ALL, -1,
-      (vvas_treenode_traverse_func) node_assign, NULL);
+  g_node_traverse (other, G_IN_ORDER, G_TRAVERSE_ALL, -1, node_assign, NULL);
 
   GST_INFERENCE_PREDICTION_UNLOCK (self);
 
@@ -717,7 +673,7 @@ prediction_find (GstInferencePrediction * obj, PredictionFindData * found)
   g_return_val_if_fail (obj, TRUE);
   g_return_val_if_fail (found, TRUE);
 
-  if (obj->prediction.prediction_id == found->prediction_id) {
+  if (obj->prediction_id == found->prediction_id) {
     found->prediction = gst_inference_prediction_ref (obj);
     ret = TRUE;
   }
@@ -726,7 +682,7 @@ prediction_find (GstInferencePrediction * obj, PredictionFindData * found)
 }
 
 static gboolean
-node_find (VvasTreeNode * node, gpointer data)
+node_find (GNode * node, gpointer data)
 {
   PredictionFindData *found = (PredictionFindData *) data;
   GstInferencePrediction *current = (GstInferencePrediction *) node->data;
@@ -743,8 +699,8 @@ prediction_find_unlocked (GstInferencePrediction * self, guint64 id)
 
   g_return_val_if_fail (self, NULL);
 
-  vvas_treenode_traverse (self->prediction.node, IN_ORDER, TRAVERSE_ALL, -1,
-      (vvas_treenode_traverse_func) node_find, &found);
+  g_node_traverse (self->predictions, G_IN_ORDER, G_TRAVERSE_ALL, -1, node_find,
+      &found);
 
   return found.prediction;
 }
@@ -771,8 +727,7 @@ classification_compare (gconstpointer a, gconstpointer b)
   GstInferenceClassification *ca = (GstInferenceClassification *) a;
   GstInferenceClassification *cb = (GstInferenceClassification *) b;
 
-  return ca->classification.classification_id ==
-      cb->classification.classification_id ? 0 : 1;
+  return ca->classification_id == cb->classification_id ? 0 : 1;
 }
 
 static void
@@ -806,8 +761,7 @@ prediction_merge (GstInferencePrediction * src, GstInferencePrediction * dst)
 
   g_return_val_if_fail (src, FALSE);
   g_return_val_if_fail (dst, FALSE);
-  g_return_val_if_fail (src->prediction.prediction_id ==
-      dst->prediction.prediction_id, FALSE);
+  g_return_val_if_fail (src->prediction_id == dst->prediction_id, FALSE);
 
   /* Two things might've happened:
    * 1) A new class was added
@@ -815,8 +769,7 @@ prediction_merge (GstInferencePrediction * src, GstInferencePrediction * dst)
    */
 
   /* Handle 1) here */
-  classification_merge ((GList *) src->prediction.classifications,
-      (GList **) & dst->prediction.classifications);
+  classification_merge (src->classifications, &dst->classifications);
 
   /* Handle 2) here */
   for (iter = src_children; iter; iter = g_slist_next (iter)) {
@@ -824,7 +777,7 @@ prediction_merge (GstInferencePrediction * src, GstInferencePrediction * dst)
 
     /* TODO: Optimize this by only searching the immediate children */
     GstInferencePrediction *found =
-        prediction_find_unlocked (dst, current->prediction.prediction_id);
+        prediction_find_unlocked (dst, current->prediction_id);
 
     /* No matching prediction, save it to append it later */
     if (!found) {
@@ -885,13 +838,13 @@ prediction_get_enabled (GstInferencePrediction * self, GList ** found)
   g_return_if_fail (self);
   g_return_if_fail (found);
 
-  if (self->prediction.enabled) {
+  if (self->enabled) {
     *found = g_list_append (*found, self);
   }
 }
 
 static gboolean
-node_get_enabled (VvasTreeNode * node, gpointer data)
+node_get_enabled (GNode * node, gpointer data)
 {
   GstInferencePrediction *self = NULL;
   GList **found = (GList **) data;
@@ -913,8 +866,8 @@ gst_inference_prediction_get_enabled (GstInferencePrediction * self)
 
   g_return_val_if_fail (self, NULL);
 
-  vvas_treenode_traverse (self->prediction.node, IN_ORDER, TRAVERSE_ALL, -1,
-      (vvas_treenode_traverse_func) node_get_enabled, &found);
+  g_node_traverse (self->predictions, G_IN_ORDER, G_TRAVERSE_ALL, -1,
+      node_get_enabled, &found);
 
   return found;
 }

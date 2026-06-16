@@ -1,6 +1,5 @@
 /*
- * Copyright 2020 - 2022 Xilinx, Inc.
- * Copyright (C) 2022-2023 Advanced Micro Devices, Inc.
+ * Copyright (C) 2020 - 2021 Xilinx, Inc.  All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -47,8 +46,7 @@ struct _GstVvas_XInfer {
 
   gchar *infer_json_file;
   gchar *ppe_json_file;
-  gboolean flag_attach_empty_infer;
-  guint batch_timeout;
+  gchar *dyn_config;
 };
 
 struct _GstVvas_XInferClass {

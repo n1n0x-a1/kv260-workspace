@@ -8,6 +8,6 @@ Description: VVAS Utility Library Implementation
 Requires: xrt >= 2.11.0 \
           jansson >= 2.11
 Version: @VERSION@
-Libs: -L${libdir} -lvvasutil-@VERSION@
+Libs: -L${libdir} -lvvasutil-@VERSION@ -lxrtutil-@VERSION@
 Cflags: -I${includedir}
 

@@ -30,7 +30,6 @@
 
 #include <gst/gst.h>
 #include <vvas/vvasmeta.h>
-#include <vvas_core/vvas_infer_classification.h>
 
 G_BEGIN_DECLS
 
@@ -54,7 +53,15 @@ struct _GstInferenceClassification
   GstMiniObject base;
   GMutex mutex;
 
-  VvasInferClassification classification;
+  /*<public>*/
+  guint64 classification_id;
+  gint class_id;
+  gdouble class_prob;
+  gchar *class_label;
+  gint num_classes;
+  gdouble *probabilities;
+  gchar **labels;
+  VvasColorMetadata label_color;
 };
 
 /**
@@ -83,10 +90,9 @@ GstInferenceClassification * gst_inference_classification_new (void);
  *
  * Returns: A newly allocated and initialized GstInferenceClassification.
  */
-GstInferenceClassification *gst_inference_classification_new_full (gint
-    class_id, gdouble class_prob, const gchar * class_label, gint num_classes,
-    const gdouble * probabilities, gchar ** labels,
-    VvasColorMetadata * label_color);
+GstInferenceClassification * gst_inference_classification_new_full (gint class_id, gdouble class_prob,
+    const gchar * class_label, gint num_classes, const gdouble * probabilities,
+    gchar ** labels, VvasColorMetadata *label_color);
 
 /**
  * gst_inference_classification_reset:
@@ -106,8 +112,7 @@ void gst_inference_classification_reset (GstInferenceClassification * self);
  *
  * Returns: a newly allocated copy of the original classification
  */
-GstInferenceClassification *gst_inference_classification_copy (const
-    GstInferenceClassification * self);
+GstInferenceClassification * gst_inference_classification_copy (const GstInferenceClassification * self);
 
 /**
  * gst_inference_classification_ref:
@@ -117,8 +122,7 @@ GstInferenceClassification *gst_inference_classification_copy (const
  *
  * Returns: the same classification, for convenience purposes.
  */
-GstInferenceClassification
-    * gst_inference_classification_ref (GstInferenceClassification * self);
+GstInferenceClassification * gst_inference_classification_ref (GstInferenceClassification * self);
 
 /**
  * gst_inference_classification_unref:
@@ -139,8 +143,7 @@ void gst_inference_classification_unref (GstInferenceClassification * self);
  *
  * Returns: a string representing the classification.
  */
-gchar *gst_inference_classification_to_string (GstInferenceClassification *
-    self, gint level);
+gchar * gst_inference_classification_to_string (GstInferenceClassification * self, gint level);
 
 /**
  * GST_INFERENCE_CLASSIFICATION_LOCK:
@@ -162,4 +165,3 @@ gchar *gst_inference_classification_to_string (GstInferenceClassification *
 G_END_DECLS
 
 #endif // __GST_INFERENCE_CLASSIFICATION__
-
