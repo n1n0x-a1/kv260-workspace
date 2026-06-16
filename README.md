@@ -253,7 +253,7 @@ flowchart TD
    Extract `DPUCZDX8G.tar.gz` into `Vitis-AI/dsa`. Apply the VVAS custom configurations:
    ```bash
       mkdir -p Vitis-AI/dsa && tar -xzf DPUCZDX8G.tar.gz -C Vitis-AI/dsa/
-      cp change/vvas-overlay/* VVAS/vvas-examples/Embedded/smart_model_select/
+      cp -rf change/vvas-overlay/* VVAS/vvas-examples/Embedded/smart_model_select/
       cd VVAS/vvas-examples/Embedded/smart_model_select
       source build.sh
    ```
