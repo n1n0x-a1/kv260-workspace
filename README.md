@@ -2,27 +2,9 @@
 
 > Personal workspace documenting the full development, deployment, and orchestration pipeline for the **Xilinx Kria KV260** edge AI platform — covering Yocto-based Linux image builds, hardware overlay configuration, AI model compilation, Kubernetes/KubeEdge cluster setup, and remote management tooling.
 
----
-
 **Maintainer**: Steven Pratama — [@syvesdh](https://github.com/syvesdh)
+
 **Last Updated**: June 2026
-
-### SSH Access Quick Start
-
-To connect to the KV260 board via SSH, ensure it is booted and connected to your network, then run:
-
-```bash
-ssh root@<kv260-ip-address>
-```
-
-> [!NOTE]
-> * **Default Username**: `root`
-> * **Password**: Passwordless login is configured by default for the `root` user in this environment.
-> * **Manual SSH Daemon Start**: If the connection is refused, the SSH daemon might not be running. Log in via the board's serial console first and start it with:
->   ```bash
->   /etc/init.d/sshd start
->   ```
-> * **Troubleshooting / Key Recovery**: If you are locked out or need to install an authorized public key, see [Section 5.6: Troubleshooting: Restoring KV260 SSH Access](#56-troubleshooting-restoring-kv260-ssh-access-native-compilation-and-symlinking) for detailed host-root mounting instructions.
 
 ---
 
@@ -50,9 +32,9 @@ Below is a detailed breakdown of the directories within the `smartapp-modified` 
     *   **Purpose**: Docker context files to build the host compilation environment container.
     *   **Key Files**: Contains a custom `ssh_config` that disables strict host key checking (`StrictHostKeyChecking no`), allowing automated SCP script file transfers from the master node to the KV260 edge node without prompting for trust confirmation.
 
-*   **[`kv260-smartapp-platform`](smartapp-modified/kv260-smartapp-platform/) (Hardware & AI Overlay Submodules)**
-    *   **Purpose**: An umbrella directory managing Git submodules for Xilinx physical overlays, platforms, and compilers.
-    *   **Registered Submodules**:
+*   **[`kv260-smartapp-platform`](smartapp-modified/kv260-smartapp-platform/) (Hardware & AI Overlay Directories)**
+    *   **Purpose**: An integrated workspace containing physical hardware overlays, platforms, and compilers.
+    *   **Components (formerly submodules, now natively tracked)**:
         1.  **[`kria-vitis-platforms`](smartapp-modified/kv260-smartapp-platform/kria-vitis-platforms/)**: Contains Vivado hardware platform scripts to generate the baseline extensible hardware platform (`kv260_ispMipiRx_vcu_DP`), managing peripherals like cameras and displays.
         2.  **[`VVAS`](smartapp-modified/kv260-smartapp-platform/VVAS/) (Vitis Video Analytics SDK)**: Provides GStreamer acceleration plugins to wrap physical overlays into GStreamer media pipelines.
         3.  **[`Vitis-AI`](smartapp-modified/kv260-smartapp-platform/Vitis-AI/)**: The AMD/Xilinx deep learning runtime, compiler, and Model Zoo. Used to quantize and target PyTorch/TensorFlow networks to the target DPU overlay.
@@ -128,9 +110,9 @@ To ensure native compatibility with standard Kubernetes (K8s) clusters while opt
 During the KubeEdge migration phase, the roles, changes, and redundancies of the active repositories were analyzed:
 
 ### 1. `smartapp-modified/kv260-smartapp-platform` (Relocated from `kv260-smartplatform`)
-* **Status**: Relocated as a Git submodule inside `smartapp-modified`.
+* **Status**: Integrated directly as a native tracked directory under `smartapp-modified/kv260-smartapp-platform` (converted from submodule to subtree).
 * **Role**: Baseline hardware reference.
-* **Reasoning**: This repository contains the Vitis video analytics overlay components (`VVAS`), DPU configurations, and legacy PetaLinux 2022.1 configurations. It has been integrated directly into the `smartapp-modified` repository as a Git submodule under `kv260-smartapp-platform` for centralized management. Since KubeEdge is a software-level orchestration transition, the physical FPGA bitstream synthesis (Vivado/Vitis flow) and Vitis-AI model compilation steps are unaffected and remain identical. The OS building phase has been replaced by the newer Yocto Scarthgap project (`yocto-xilinx`).
+* **Reasoning**: This directory contains the Vitis video analytics overlay components (`VVAS`), DPU configurations, and legacy PetaLinux 2022.1 configurations. It has been integrated directly into the `smartapp-modified` repository as a tracked directory under `kv260-smartapp-platform` (with full history preserved) for centralized management without external repository dependencies. Since KubeEdge is a software-level orchestration transition, the physical FPGA bitstream synthesis (Vivado/Vitis flow) and Vitis-AI model compilation steps are unaffected and remain identical. The OS building phase has been replaced by the newer Yocto Scarthgap project (`yocto-xilinx`).
 
 ### 2. `smartapp-modified` vs. `kv260-smartapp-auto` (Active vs. Template)
 * **Status**: Conceptually redundant, but `smartapp-modified` is the active development path.
@@ -221,12 +203,10 @@ flowchart TD
 > Vitis/Vivado 2022.1 requires an Ubuntu 20.04 environment. If your host is Ubuntu 24.04, you must build the platform inside an Ubuntu 20.04 container mapping your host's Xilinx tools. 
 > For detailed instructions on downloading, preparing host directories, installing dependencies, and running the graphical installer container, refer to the [Vitis Installation Guide](smartapp-modified/vitis_installation_guide.md).
 
-> [!NOTE]
-
-1. **Initialize and Update Submodules**:
+1. **Workspace Sync**:
+   Since the submodules have been fully converted into Git subtrees, all meta-layers, platforms, and SDK files are now tracked natively in the parent repository. You do **not** need to run `git submodule update`. Simply ensure your local workspace is up-to-date:
    ```bash
-   cd smartapp-modified/kv260-smartapp-platform
-   git submodule update --init --recursive --progress -j 8
+   git pull
    ```
 
 2. **Launch the Vitis Build Container (Ubuntu 20.04)**:
@@ -398,26 +378,32 @@ flowchart TD
 
    * **If you used Option B in Phase 2 (allocated space via Yocto configuration)**:
      The root partition is already expanded to 4.4GB out-of-the-box. You can **skip** this step entirely.
-   * **If you are using the default image size and need to expand it manually**:
-     Unmount the partitions on your host computer and resize the partition:
-     * **Unmount the partitions** if they were auto-mounted on the host:
-       ```bash
-       sudo umount -l /dev/sda1
-       sudo umount -l /dev/sda2
-       ```
-     * **Resize partition 2** (`ROOTFS`) to fill 100% of the SD card:
-       ```bash
-       sudo parted /dev/sda resizepart 2 100%
-       ```
-     * **Check filesystem integrity** (required before resizing):
-       ```bash
-       sudo e2fsck -f /dev/sda2
-       ```
-     * **Expand the ext4 filesystem** to match the new partition size:
-       ```bash
-       sudo resize2fs /dev/sda2
-       ```
-     *(Note: The root filesystem on `/dev/sda2` will now be resized to the full size of the SD card (approx. 29.7 GB).*
+   * **If you are using the default image size and need to expand it manually (Option A: Resize on your Host Computer - Recommended)**:
+      1. Plug the SD card into your **host computer** (the Ubuntu laptop/workstation).
+      2. **Identify the SD card device name** on the host (e.g., using `lsblk`). If it is `/dev/sda` (or `/dev/sdb`, etc.), run the following commands:
+         ```bash
+         # (Run on Host)
+         # Unmount the partitions if they were auto-mounted
+         sudo umount -l /dev/sda1
+         sudo umount -l /dev/sda2
+
+         # Resize partition 2 (ROOTFS) to fill 100% of the SD card
+         sudo parted /dev/sda resizepart 2 100%
+
+         # Check filesystem integrity (required before resizing)
+         sudo e2fsck -f /dev/sda2
+
+         # Expand the ext4 filesystem to match the new partition size
+         sudo resize2fs /dev/sda2
+         ```
+         *(Note: The root filesystem on `/dev/sda2` will now be resized to the full size of the SD card, approx. 29.7 GB).*
+      3. **Put the SD card back** into the KV260 and boot it.
+      4. **Check the Filesystem Size (Mounted Space)** on the booted KV260:
+         ```bash
+         df -h /
+         ```
+         * `-h`: Shows sizes in human-readable format (e.g., `29G`, `4.4G`).
+         * `/`: Targets the root directory mounted on the active root partition.
 
 3. **Copy Boot Assets**:
    * Mount the `BOOT` partition of the SD card on your computer and copy/replace the repo's `system.dtb` file to the `BOOT` partition of the SD card.
@@ -446,14 +432,14 @@ flowchart TD
      ping master.ninox.com
      ```
      Record the obtained IP address; this is your `<kv260-ip-address>` for Phase 4.
-   * Start the SSH daemon manually:
-     ```bash
-     /etc/init.d/sshd status
-     /etc/init.d/sshd start    # Ensure SSH daemon is running
+    * Verify the SSH daemon is running (typically enabled and started automatically by default):
+      ```bash
+      # Check if port 22 is listening
+      netstat -tuln | grep 22
 
-     # Check if the port is listening      
-     netstat -tuln | grep 22
-     ```
+      # Check the systemd socket status:
+      systemctl status sshd.socket
+      ```
    * Exit the `screen` session to return to your host command line by pressing **`Ctrl+A`** followed by **`K`**, and then confirming with **`Y`**.
 
 ---
@@ -489,11 +475,12 @@ flowchart TD
 ##### Detailed Transfer Steps
 
 > [!TIP]
-> **SSH Server is Pre-configured but Needs Manual Start**: The compiled Yocto image automatically packages `openssh` and enables `debug-tweaks`. However, you must start the SSH daemon manually on the board's serial console before connecting:
+> **SSH Server is Pre-configured and Running**: The compiled Yocto image automatically packages OpenSSH, enables `debug-tweaks`, and starts the daemon automatically via systemd socket activation. If you ever need to manually check or start it on the board's serial console:
 > ```bash
-> /etc/init.d/sshd start
+> # Check the SSH socket status:
+> systemctl status sshd.socket
 > ```
-> Once started, this allows passwordless login for the `root` user.
+> This allows passwordless login for the `root` user.
 
 Once the board is booted and connected to the network, use SSH/SCP to transfer your custom hardware overlay, models, and application files:
 
