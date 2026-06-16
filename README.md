@@ -210,10 +210,11 @@ flowchart TD
    ```
 
 2. **Launch the Vitis Build Container (Ubuntu 20.04)**:
-   Launch a Docker container that maps your workspace and your host's Xilinx installation directory (e.g. `/tools/Xilinx` or `/opt/Xilinx`):
+   Change directory into the platform directory and launch a Docker container that maps your workspace and your host's Xilinx installation directory (e.g. `/tools/Xilinx` or `/opt/Xilinx`):
    ```bash
-    docker run -it \
-      --name vitis-builder \
+   cd smartapp-modified/kv260-smartapp-platform
+   docker run -it \
+     --name vitis-builder \
       --net=host \
       -e TERM=xterm-256color \
       -v $(pwd):$(pwd) \
