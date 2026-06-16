@@ -1,0 +1,16 @@
+{
+  "model-name": "face_mask",
+  "num-labels": 2,
+  "labels" :[
+    {
+      "name": "No Mask",
+      "label": 0,
+      "display_name" : "No Mask"
+    },
+    {
+      "name": "Mask",
+      "label": 1,
+      "display_name" : "Mask"
+    }
+  ]
+}

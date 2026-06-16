@@ -1,0 +1,14 @@
+#Note: Mention Each package in individual line
+#These packages will get added into rootfs menu entry
+
+CONFIG_gpio-demo
+CONFIG_peekpoke
+CONFIG_packagegroup-petalinux-som
+CONFIG_packagegroup-core-full-cmdline
+CONFIG_packagegroup-petalinux-jupyter
+CONFIG_kv260-vvas-sms
+CONFIG_kv260-vvas-sms-models
+CONFIG_kv260-vvas-sms-app
+CONFIG_packagegroup-kv260-vvas-sms
+CONFIG_systemd-conf_1.0
+CONFIG_ap1302-ar1335-single-firmware
