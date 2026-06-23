@@ -243,7 +243,7 @@ function build_model() {
 	done
 }
 
-mkdir -p ${TARGET}
+mkdir -p ${TARGET} ${CACHE}
 path='./model-list'
 build_model $path
 #rm download_list.txt name_list.txt checksum_list.txt model_path.txt

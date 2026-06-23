@@ -122,7 +122,7 @@ During the KubeEdge migration phase, the roles, changes, and redundancies of the
     * An updated CLI tool `ninoctl` (Go) that supports two-argument model deployments (`DeployModel(string, string)` to specify both directory name and model name).
     * Python script fixes (e.g., shell command execution wrappers in `vitis-server.py`).
     * Development helpers like `vitisImage` Docker contexts and `testlines.md`.
-  * **`kv260-smartapp-auto`** acts as the clean template repository using placeholders (e.g., `<PATH-TO-VITIS-AI>`).
+  * **`kv260-smartapp-auto`** acts as the clean template repository using placeholders (e.g., `path2vitisai`).
 * **Direction**: Treat `smartapp-modified` as the primary workspace repository for new features and deployment setups, and keep `kv260-smartapp-auto` as the generic upstream baseline.
 
 ### 3. Toolchain & Host OS Versioning Compatibility Warning
@@ -407,7 +407,22 @@ flowchart TD
          * `/`: Targets the root directory mounted on the active root partition.
 
 3. **Copy Boot Assets**:
-   * Mount the `BOOT` partition of the SD card on your computer and copy/replace the repo's `system.dtb` file to the `BOOT` partition of the SD card.
+   * Mount the `BOOT` partition of the SD card on your computer and copy/replace the repository's `system.dtb` (located in the `yocto-xilinx` directory of this repo) to the `BOOT` partition of the SD card.
+     
+     > [!IMPORTANT]
+     > The repository's `system.dtb` has been customized to override the default kernel boot parameters with `systemd.unified_cgroup_hierarchy=0 systemd.legacy_systemd_cgroup_controller=yes cgroup_enable=memory swapaccount=1`. This forces systemd to boot with cgroup v1 compatibility, which is a strict prerequisite for the KubeEdge `edgecore` daemon to run on Yocto.
+     
+     If you ever need to rebuild or modify the device tree binary (`system.dtb`) manually:
+     ```bash
+     # 1. Decompile system.dtb using the precompiled dtc native tool built by Yocto:
+     yocto-xilinx/kv260-yocto/poky/build/tmp/sysroots-components/x86_64/dtc-native/usr/bin/dtc -I dtb -O dts -o yocto-xilinx/system.dts yocto-xilinx/system.dtb
+
+     # 2. Edit system.dts to update the "chosen" node's bootargs property:
+     # bootargs = "earlycon console=ttyPS1,115200 clk_ignore_unused init_fatal_sh=1 cma=900M systemd.unified_cgroup_hierarchy=0 systemd.legacy_systemd_cgroup_controller=yes cgroup_enable=memory swapaccount=1";
+
+     # 3. Compile system.dts back to system.dtb:
+     yocto-xilinx/kv260-yocto/poky/build/tmp/sysroots-components/x86_64/dtc-native/usr/bin/dtc -I dts -O dtb -o yocto-xilinx/system.dtb yocto-xilinx/system.dts
+     ```
 
 4. **Power Up & Initial Config**:
    * Insert the SD card into the KV260.
@@ -515,9 +530,12 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
 * **Deploy DPU Architecture File on Master VM (`arch.json`)**:
   * The canonical architecture file is located at `smartapp-modified/kv260-smartapp-clusterserver/need/arch.json` (fingerprint: `0x101000016010406`).
   * Copy this `arch.json` file from your host workspace to your Kubernetes Master VM.
-  * **How to locate the destination directory (`<path-to-Vitis-AI>`)**:
+  * **How to locate the destination directory (`path2vitisai`)**:
     This is the host directory on your Master VM where the Vitis-AI repository is cloned (e.g., `/home/gary/path2vitisai`). You can verify its path by looking at the volume mount configurations (`hostPath.path` for the `vitis` and `work` volumes) inside the Vitis-AI deployment manifest (`smartapp-modified/kv260-smartapp-clusterserver/deployment/vitis-ai.yaml`).
   * Place the `arch.json` file in that host directory so that the Vitis-AI compiler pod can access it.
+  ```bash
+  scp smartapp-modified/kv260-smartapp-clusterserver/need/arch.json k8s@master.ninox.com:/home/k8s/path2vitisai/
+  ```
 
 ---
 
@@ -563,24 +581,21 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
    sudo keadm gettoken --kube-config=$HOME/.kube/config
    ```
 3. **Join Edge Node (on KV260)**:
-   Run the following unified setup command block to fully configure the Yocto host environment (cleans directories, mounts cgroups, syncs system time, installs/configures CNI plugins, restarts containerd, and creates systemd placeholder directories):
+   
+   > [!IMPORTANT]
+   > Ensure you have booted the KV260 board using the customized `system.dtb` (which enables cgroup v1 hybrid mode). Without this, systemd will boot in cgroup v2-only mode and KubeEdge will fail to start.
+   
+   Run the following unified setup command block to configure the Yocto host environment (cleans directories, syncs system time, installs/configures CNI plugins, and restarts containerd):
    ```bash
    # 1. Reset KubeEdge & clean config
+   systemctl stop edgecore 2>/dev/null || true
    keadm reset --force || true
    rm -rf /etc/kubeedge/
 
-   # 2. Mount cgroups (Yocto environment)
-   mkdir -p /sys/fs/cgroup
-   mount -t tmpfs -o uid=0,gid=0,mode=0755 cgroup /sys/fs/cgroup 2>/dev/null || true
-   for sys in $(awk '!/^#/ { if ($4 == 1) print $1 }' /proc/cgroups); do
-     mkdir -p /sys/fs/cgroup/$sys
-     mount -t cgroup -o $sys cgroup /sys/fs/cgroup/$sys 2>/dev/null || true
-   done
-
-   # 3. Sync time to prevent TLS handshake failures
+   # 2. Sync time to prevent TLS handshake failures
    ntpd -q -g -p pool.ntp.org || date -s "2026-06-12 10:30:00"
 
-   # 4. Install & configure CNI plugins (ARM64)
+   # 3. Install & configure CNI plugins (ARM64)
    mkdir -p /opt/cni/bin
    cp -r /usr/lib/cni/* /opt/cni/bin/ 2>/dev/null || true
    cp -r /usr/libexec/cni/* /opt/cni/bin/ 2>/dev/null || true
@@ -614,29 +629,24 @@ Once the board is booted and connected to the network, use SSH/SCP to transfer y
    }
    EOF
 
-   # 5. Restart containerd to apply CNI & cgroup mounts
-   killall containerd 2>/dev/null || true
-   sleep 1
-   containerd &
-   sleep 2
-
-   # 6. Create systemd configuration placeholder directory
-   mkdir -p /etc/systemd/system
+   # 4. Restart containerd to apply CNI
+   systemctl restart containerd
    ```
    Run `keadm join` on the KV260:
    ```bash
    keadm join --cloudcore-ipport=<MASTER-IP>:10000 --token=<TOKEN> --kubeedge-version=1.15.0
    ```
-   *Note: On Yocto (non-systemd), the `keadm join` command may hang at the end while trying to start/check the systemd service. If it hangs for more than 10-15 seconds, press `Ctrl+C` to interrupt the command. The configuration files and certificates have already been generated at this point.*
+   *Note: Use the active `k8s@master.ninox.com` IP (typically `192.168.123.210`) as `<MASTER-IP>`.*
 
    Configure MQTT to use the internal broker to prevent continuous connection errors on the default port:
    ```bash
    sed -i 's/mqttMode: 2/mqttMode: 0/g' /etc/kubeedge/config/edgecore.yaml
    ```
 
-   Start the KubeEdge core daemon manually in the background:
+   Start and enable the `edgecore` service via systemd:
    ```bash
-   edgecore &
+   systemctl start edgecore
+   systemctl enable edgecore
    ```
    *Note: In the edgecore logs, you may see recurrent warnings/errors like `Failed to get the info of the filesystem with mountpoint` or `Failed to get system UUID`. These are due to cAdvisor's inability to query Yocto's root filesystem stats and the absence of a machine-id file. They are completely harmless and can be safely ignored (the node will still register as STATUS=Ready and execute containers normally).*
 4. **Verify the edge node has joined (on Master VM)**:
