@@ -1,0 +1,23 @@
+{
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/yocto-xilinx/kv260-yocto/build/**": true,
+    "**/yocto-xilinx/kv260-yocto/poky/**": true,
+    "**/smartapp-modified/kv260-smartapp-platform/Vitis-AI/model_zoo/**": true,
+    "**/models.b3136/**": true,
+    "**/binary_container_*/**": true,
+    "**/packaged_kernel_*/**": true,
+    "**/tmp_kernel_pack_*/**": true,
+    "**/files/videos/**": true
+  },
+  "search.exclude": {
+    "**/yocto-xilinx/kv260-yocto/build": true,
+    "**/yocto-xilinx/kv260-yocto/poky": true,
+    "**/smartapp-modified/kv260-smartapp-platform/Vitis-AI/model_zoo": true,
+    "**/models.b3136": true,
+    "**/binary_container_*": true,
+    "**/packaged_kernel_*": true,
+    "**/tmp_kernel_pack_*": true,
+    "**/files/videos": true
+  }
+}

@@ -8,6 +8,24 @@
 
 ---
 
+> [!WARNING]
+> **This document describes the legacy Yocto/PetaLinux-based architecture and is no longer the active development path.**
+>
+> The custom Yocto OS build was abandoned due to compounding fragility: `CONFIG_VIDEO_AP1302` had to be enabled manually via `menuconfig` and recompiled on every clean build, the USB webcam path hit an unrecoverable kernel bug (`uvcvideo` + `usb5744` hub driver incompatibility confirmed unfixable without a kernel patch), the VCU/Allegro H.264 encoder was missing from the image entirely, and enabling cgroup v1 for KubeEdge required patching `system.dtb` bootargs by hand. None of this is sustainable.
+>
+> **Current architecture**: Stock **Kria Ubuntu 22.04 LTS** image + AMD's published `xilinx/smartcam:2022.1` Docker container. All hardware acceleration, FPGA overlay loading, AI inference, and KubeEdge orchestration run identically on Ubuntu — without any custom OS build.
+>
+> → **See [`docs/ubuntu/README.md`](docs/ubuntu/README.md) for the current architecture and active deployment guide.**
+>
+> **Repository layout:**
+> ```
+> docs/ubuntu/   ← Current architecture (Ubuntu 22.04 + Docker)
+> docs/yocto/    ← Legacy reference only (Yocto/PetaLinux)
+> ubuntu-migration/  ← Active deployment artifacts (xclbin, models, configs)
+> ```
+
+---
+
 #### Directory Structure and Submodule Analysis
 
 Below is a detailed breakdown of the directories within the `smartapp-modified` workspace and their respective functions:
