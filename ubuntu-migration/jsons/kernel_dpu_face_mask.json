@@ -1,0 +1,18 @@
+{
+  "xclbin-location":"/home/ubuntu/ubuntu-migration/dpu.xclbin",
+  "vvas-library-repo": "/usr/lib/",
+  "element-mode":"inplace",
+  "kernel" : {
+    "library-name":"libvvas_xdpuinfer.so",
+    "config": {
+      "model-name" : "face_mask_detection_pt",
+      "model-class" : "YOLOV3",
+      "model-format" : "BGR",
+      "model-path" : "/usr/share/vitis_ai_library/models/",
+      "run_time_model" : false,
+      "need_preprocess" : false,
+      "performance_test" : false,
+      "debug_level" : 1
+    }
+  }
+}

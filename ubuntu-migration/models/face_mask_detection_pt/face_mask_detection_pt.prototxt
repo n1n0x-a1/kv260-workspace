@@ -1,0 +1,35 @@
+model {
+  name: "face_mask"
+  kernel {
+     name: "face_mask"
+     mean: 0.0
+     mean: 0.0
+     mean: 0.0
+     scale: 0.00392157
+     scale: 0.00392157
+     scale: 0.00392157
+  }
+  model_type : YOLOv3
+  yolo_v3_param {
+    num_classes: 2
+    anchorCnt: 3
+    layer_name: "114"
+    layer_name: "124"
+    conf_threshold: 0.2
+    nms_threshold: 0.6
+    biases: 12
+    biases: 18
+    biases: 37
+    biases: 49
+    biases: 52
+    biases: 132
+    biases: 115
+    biases: 73
+    biases: 119
+    biases: 199
+    biases: 242
+    biases: 238
+    test_mAP: false
+    iou_type: 1
+  }
+}

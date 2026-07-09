@@ -1,0 +1,22 @@
+{
+  "xclbin-location":"/home/ubuntu/ubuntu-migration/dpu.xclbin",
+  "vvas-library-repo": "/usr/lib/",
+  "element-mode":"inplace",
+  "kernels" :[
+    {
+      "library-name":"libvvas_xboundingbox.so",
+      "config": {
+        "model-name" : "face_mask_detection_pt",
+        "display_output" : 2,
+        "font_size" : 4,
+        "font" : 1,
+        "thickness" : 4,
+        "y_offset" : 0,
+        "debug_level" : 1,
+        "label_color" : { "blue" : 0, "green" : 0, "red" : 255 },
+        "label_filter" : [ "class" ],
+        "classes" : []
+      }
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+    "lib": "libvart-dpu-runner.so",
+    "filename": "face_mask_detection_pt.xmodel",
+    "kernel": [
+        "subgraph_Darknet__Darknet_FeatureConcat_module_list__ModuleList_118__Cat_cat__input_228"
+    ],
+    "target": "DPUCZDX8G_ISA1_B3136"
+}

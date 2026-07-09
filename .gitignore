@@ -1,1 +1,25 @@
 *.wic.gz
+*.wic
+
+# Vitis/Vivado build & synthesis byproducts
+**/binary_container_*/
+**/packaged_kernel_*/
+**/tmp_kernel_pack_*/
+**/sample_link.ini
+**/vivado.jou
+**/vivado.log
+**/v++_*.log
+**/xcd.log
+**/xrc.log
+
+# Vitis-AI model zoo (large downloaded model files)
+smartapp-modified/kv260-smartapp-platform/Vitis-AI/model_zoo/
+smartapp-modified/kv260-smartapp-platform/Vitis-AI/.confirm
+
+# Compiled model binaries / large media assets
+**/models.b3136/
+**/files/videos/
+
+# Yocto/PetaLinux build output
+yocto-xilinx/kv260-yocto/build/
+**/wic/
