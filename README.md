@@ -15,13 +15,13 @@
 >
 > **Current architecture**: Stock **Kria Ubuntu 22.04 LTS** image + AMD's published `xilinx/smartcam:2022.1` Docker container. All hardware acceleration, FPGA overlay loading, AI inference, and KubeEdge orchestration run identically on Ubuntu — without any custom OS build.
 >
-> → **See [`docs/ubuntu/README.md`](docs/ubuntu/README.md) for the current architecture and active deployment guide.**
+> → **See [`ubuntu-migration/docs/README.md`](ubuntu-migration/docs/README.md) for the current architecture and active deployment guide.**
 >
 > **Repository layout:**
 > ```
-> docs/ubuntu/   ← Current architecture (Ubuntu 22.04 + Docker)
-> docs/yocto/    ← Legacy reference only (Yocto/PetaLinux)
-> ubuntu-migration/  ← Active deployment artifacts (xclbin, models, configs)
+> ubuntu-migration/       ← Active deployment artifacts + all current-arch docs
+>   └── docs/             ← Current architecture guides and plans
+> docs/yocto/             ← Legacy reference only (Yocto/PetaLinux)
 > ```
 
 ---

@@ -69,26 +69,24 @@ AMD's official Ubuntu 22.04 Kria image solves all of these out of the box: AP130
 
 ```
 kv260-workspace/
-├── README.md                       ← Legacy Yocto architecture (this notice)
+├── README.md                       ← Legacy Yocto architecture + pointer here
 ├── Dockerfile                      ← Legacy Yocto build container
 │
-├── docs/
-│   ├── ubuntu/                     ← YOU ARE HERE (current architecture)
+├── docs/yocto/                     ← Legacy reference only
+│   ├── camera_research_guide.md
+│   ├── camera_setup_guide.md
+│   ├── usb_webcam_quickstart.md
+│   ├── k8s_network_architecture.md
+│   └── pipelines2.png
+│
+├── ubuntu-migration/               ← Active deployment artifacts + docs
+│   ├── docs/                       ← YOU ARE HERE (current architecture)
 │   │   ├── README.md
 │   │   ├── ubuntu_migration_plan.md        ← 9-phase migration plan
 │   │   ├── ubuntu_migration_research.md    ← Why-to-migrate rationale
-│   │   └── official_smartcam_deployment_method.md
-│   │
-│   └── yocto/                      ← Legacy reference only
-│       ├── camera_research_guide.md
-│       ├── camera_setup_guide.md
-│       ├── usb_webcam_quickstart.md
-│       ├── k8s_network_architecture.md
-│       └── pipelines2.png
-│
-├── ubuntu-migration/               ← Active deployment artifacts
-│   ├── smartcam_deployment_guide.md        ← Step-by-step Ubuntu deployment guide
-│   ├── smartcam_deployment_timeline.md     ← Raw session log
+│   │   ├── official_smartcam_deployment_method.md
+│   │   ├── smartcam_deployment_guide.md    ← Step-by-step deployment guide
+│   │   └── smartcam_deployment_timeline.md ← Raw session log
 │   ├── dpu.xclbin                          ← FPGA accelerator binary (7.6MB)
 │   ├── arch.json                           ← DPU arch fingerprint (DPUCZDX8G_ISA1_B3136)
 │   ├── overlay/                            ← kv260-vvas-sms FPGA overlay files
@@ -103,7 +101,7 @@ kv260-workspace/
 
 ## Quick Start (From Zero to Live Stream)
 
-> Full step-by-step guide with real terminal output: [`ubuntu-migration/smartcam_deployment_guide.md`](../../ubuntu-migration/smartcam_deployment_guide.md)
+> Full step-by-step guide with real terminal output: [`smartcam_deployment_guide.md`](smartcam_deployment_guide.md)
 
 ```bash
 # --- On KV260 board (Ubuntu 22.04, via UART ttyUSB1 @ 115200) ---
@@ -148,7 +146,7 @@ ffplay rtsp://192.168.123.118:554/test
 
 | Phase | Description | Status | Doc |
 |---|---|---|---|
-| 1 | Flash Ubuntu 22.04 + Docker + firmware | ✅ Done | [`smartcam_deployment_guide.md`](../../ubuntu-migration/smartcam_deployment_guide.md) |
+| 1 | Flash Ubuntu 22.04 + Docker + firmware | ✅ Done | [`smartcam_deployment_guide.md`](smartcam_deployment_guide.md) |
 | 2 | Load `kv260-smartcam` overlay + run `xilinx/smartcam:2022.1` | ✅ Done | Same |
 | 3 | Enable cgroup v1 (required for KubeEdge `edgecore`) | ⬜ Pending | [`ubuntu_migration_plan.md`](ubuntu_migration_plan.md) Phase 3 |
 | 4 | Install containerd + CNI plugins | ⬜ Pending | [`ubuntu_migration_plan.md`](ubuntu_migration_plan.md) Phase 4 |

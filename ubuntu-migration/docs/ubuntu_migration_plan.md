@@ -13,14 +13,14 @@
 Dev PC (x86, Ubuntu 24.04, IP: 192.168.123.128)
 ├── Vivado/Vitis 2022.1 (in Ubuntu 20.04 Docker container)
 │   └── Builds: .bit, .xclbin, arch.json  ──────────────────────┐
-├── Vitis-AI Docker (xilinx/vitis-ai:2.5)                        │
-│   └── Compiles: .xmodel files (face_mask_detection_pt, etc.)   │
-├── Yocto/BitBake build environment (kv260-yocto Docker)         │
+├── Vitis-AI Docker (xilinx/vitis-ai:2.5)                       │
+│   └── Compiles: .xmodel files (face_mask_detection_pt, etc.)  │
+├── Yocto/BitBake build environment (kv260-yocto Docker)        │
 │   └── Builds: petalinux-image-minimal.wic.gz  ─────────────┐  │
-└── ninoctl CLI (Go binary)                                   │  │
-                                                              │  │
+└── ninoctl CLI (Go binary)                                  │  │
+                                                             │  │
 KV260 Board (ARM64 Cortex-A53, IP: 192.168.123.118)          │  │
-├── OS: Custom Yocto/PetaLinux Scarthgap minimal  ◄───────────┘  │
+├── OS: Custom Yocto/PetaLinux Scarthgap minimal  ◄──────────┘  │
 ├── FPGA overlay: kv260-vvas-sms (DPU B3136)  ◄─────────────────┘
 ├── Models: /opt/xilinx/kv260-vvas-sms/models.b3136/
 │   ├── face_mask_detection_pt/  (custom compiled .xmodel)
