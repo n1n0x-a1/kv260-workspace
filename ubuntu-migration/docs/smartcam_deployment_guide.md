@@ -1,6 +1,7 @@
 # KV260 Smartcam Deployment Guide
 ## Stock Kria Ubuntu 22.04 + `xilinx/smartcam:2022.1`
 
+Based on https://xilinx.github.io/kria-apps-docs/kv260/2022.1/linux_boot/ubuntu_22_04/build/html/docs/intro.html
 > Compiled from the actual deployment session on the KV260 (June 2026).  
 > Includes every command, real terminal output, and troubleshooting fix encountered during the live session.  
 > Board IP confirmed: `192.168.123.118` | Dev PC IP: `192.168.123.128`
