@@ -133,7 +133,7 @@ Verify the board boots, SSH works, and `xmutil listapps` shows `kv260-smartcam` 
 > [!CAUTION]
 > **Do not edit `boot.scr.uimg` directly.** Kria Ubuntu boots via U-Boot, not GRUB — there is no `/etc/default/grub` to patch. Extracting, editing, and recompiling `boot.scr.uimg` with `mkimage` bricked the boot script twice. `boot.scr.uimg.bak` on the boot partition is the safe recovery copy; only attempt this again with an SD card reader on a second PC on hand.
 >
-> If `edgecore` fails at Phase 5 with a cgroup-related error, fix the driver mismatch instead of touching bootargs:
+> If `edgecore` fails at Phase 4 with a cgroup-related error, fix the driver mismatch instead of touching bootargs:
 > ```bash
 > grep -i cgroup /etc/containerd/config.toml
 > grep -i cgroup /etc/kubeedge/config/edgecore.yaml
@@ -142,7 +142,7 @@ Verify the board boots, SSH works, and `xmutil listapps` shows `kv260-smartcam` 
 
 ---
 
-### Phase 4 — Install containerd + CNI Plugins
+### Phase 3 — Install containerd + CNI Plugins
 
 **Status: ✅ Done.**
 
@@ -203,7 +203,7 @@ sudo systemctl restart containerd
 
 ---
 
-### Phase 5 — KubeEdge `edgecore` Join
+### Phase 4 — KubeEdge `edgecore` Join
 
 **Status: ✅ Done. Node joins as `Ready` (`kubectl get nodes` confirmed).**
 
@@ -251,7 +251,7 @@ kubectl get nodes
 
 ---
 
-### Phase 6 — Load FPGA Overlay + Deploy Custom Models
+### Phase 5 — Load FPGA Overlay + Deploy Custom Models
 
 This is the core of the custom model deployment. Two approaches — pick one based on your goal.
 
@@ -336,7 +336,7 @@ v4l2-ctl -d /dev/video2 --set-fmt-video=width=1920,height=1080,pixelformat=NV12
 
 ---
 
-#### Known Issues / Blockers for Phase 6A (CSI + custom VVAS pipeline)
+#### Known Issues / Blockers for Phase 5A (CSI + custom VVAS pipeline)
 
 | # | Problem | What we tried | Status |
 |---|---|---|---|
@@ -534,7 +534,7 @@ gst-launch-1.0 udpsrc port=5000 \
 
 ---
 
-### Phase 7 — Socket Servers as systemd Services
+### Phase 6 — Socket Servers as systemd Services
 
 **Status: Not yet done on Ubuntu board.**
 
@@ -581,7 +581,7 @@ sudo systemctl status xmutil-server
 
 ---
 
-### Phase 8 — `ninoctl` CLI Integration
+### Phase 7 — `ninoctl` CLI Integration
 
 **Status: No changes needed to ninoctl source. Cross-compile and deploy.**
 
@@ -600,7 +600,7 @@ No changes to the Go source are needed. The board IP (`192.168.123.118`) and soc
 
 ---
 
-### Phase 9 — KubeEdge Pod Manifests (Update for Ubuntu)
+### Phase 8 — KubeEdge Pod Manifests (Update for Ubuntu)
 
 The existing `xmutil.yaml` and `app-pod.yaml` manifests from `smartapp-modified/kv260-smartapp-clusterserver/deployment/` apply with minor path adjustments for Ubuntu (e.g. home directory is `/home/ubuntu/` instead of `/home/petalinux/`).
 
@@ -633,7 +633,7 @@ On Ubuntu 22.04, achieving full boot-persistence is easier than on the Yocto min
 | `xmutil loadapp kv260-smartcam` | Add to `/etc/rc.local` or create a systemd `oneshot` unit |
 | `ap1302` driver | Auto-loads on Ubuntu when overlay is applied — no manual insmod needed |
 | `media-ctl` pad format fixup | Udev rule triggered on `/dev/video0` appearance |
-| Socket servers | systemd services (Phase 7 above) |
+| Socket servers | systemd services (Phase 6 above) |
 | `edgecore` | `keadm join` already registers it as a systemd service automatically |
 | Docker container pipeline | Create a systemd service that runs `docker run ...` on boot |
 
@@ -673,13 +673,13 @@ These remain identical and are unaffected by the OS change:
 |---|---|---|---|
 | 1 | Hardware overlay + model compile (dev PC) | None — already done | ✅ Complete |
 | 2 | Flash stock Ubuntu 22.04 to board | ~10 min | ✅ Complete |
-| 4 | containerd + CNI install | ~15 min | ✅ Done |
-| 5 | `keadm join` | ~10 min | ✅ Done |
-| 6A | Load overlay + mount custom model into smartcam container | ~30 min | ⚠️ Blocked — v4l2src buffer pool failure on /dev/video2; see Phase 6 Known Issues |
-| 6B | Package + deploy custom `kv260-vvas-sms` overlay (optional) | ~1–2 hrs | ✅ Done — pipeline confirmed working; live frames captured on dev PC |
-| 7 | Socket servers as systemd services | ~20 min | ⬜ TODO |
-| 8 | `ninoctl` cross-compile + test | ~10 min | ⬜ TODO |
-| 9 | Update KubeEdge pod manifests for Ubuntu paths | ~15 min | ⬜ TODO |
+| 3 | containerd + CNI install | ~15 min | ✅ Done |
+| 4 | `keadm join` | ~10 min | ✅ Done |
+| 5A | Load overlay + mount custom model into smartcam container | ~30 min | ⚠️ Blocked — v4l2src buffer pool failure on /dev/video2; see Phase 5 Known Issues |
+| 5B | Package + deploy custom `kv260-vvas-sms` overlay (optional) | ~1–2 hrs | ✅ Done — pipeline confirmed working; live frames captured on dev PC |
+| 6 | Socket servers as systemd services | ~20 min | ⬜ TODO |
+| 7 | `ninoctl` cross-compile + test | ~10 min | ⬜ TODO |
+| 8 | Update KubeEdge pod manifests for Ubuntu paths | ~15 min | ⬜ TODO |
 | — | Per-boot persistence (systemd units, udev rules) | ~30 min | ⬜ TODO |
 
 **Total estimated effort from current state (Ubuntu board already working): ~2–3 hours.**
