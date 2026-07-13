@@ -78,7 +78,6 @@ KubeEdge Master (Proxmox VM)                           ← NO CHANGE
 | Phase 1 (Vivado/Vitis build) | Unchanged | Unchanged |
 | Phase 2 (OS image build) | `bitbake petalinux-image-minimal` — slow, brittle | **Gone** — flash stock AMD image |
 | Phase 3 (Flash + partition) | Flash `.wic.gz` + manual resize, copy `system.dtb` | Flash standard `.img.xz` — no resize, no dtb copy |
-| cgroup v1 for edgecore | Decompile/edit/recompile `system.dtb` bootargs | **Not needed** — KubeEdge 1.15.0 supports cgroup v2 natively (Ubuntu 22.04 default) |
 | containerd install | Baked into Yocto image via `meta-kubeedge` | `apt install containerd` |
 | Phase 4 (SCP artifacts to board) | Unchanged | Unchanged |
 | Phase 5 (keadm join) | Unchanged | Unchanged |
@@ -131,26 +130,15 @@ Verify the board boots, SSH works, and `xmutil listapps` shows `kv260-smartcam` 
 
 ---
 
-### Phase 3 — ~~Enable cgroup v1~~ SKIPPED
-
-**Status: Skipped — not required for KubeEdge 1.15.0.**
-
-> [!NOTE]
-> This phase was originally planned because the Yocto path required patching `system.dtb` bootargs to force cgroup v1 for `edgecore`. On Ubuntu the plan was to use `update-grub` instead — but **Kria Ubuntu does not use GRUB**. It uses U-Boot with a compiled `boot.scr.uimg` script on the FAT boot partition. `update-grub` is not installed and `/etc/default/grub` has no effect.
+> [!CAUTION]
+> **Do not edit `boot.scr.uimg` directly.** Kria Ubuntu boots via U-Boot, not GRUB — there is no `/etc/default/grub` to patch. Extracting, editing, and recompiling `boot.scr.uimg` with `mkimage` bricked the boot script twice. `boot.scr.uimg.bak` on the boot partition is the safe recovery copy; only attempt this again with an SD card reader on a second PC on hand.
 >
-> Attempting to modify `boot.scr.uimg` directly (extract → edit → recompile with `mkimage`) failed twice and bricked the boot script both times. The `boot.scr.uimg.bak` backup on the boot partition is the safe copy — **do not attempt to modify `boot.scr.uimg` again** without a reliable recovery path (SD card reader on a second PC).
->
-> More importantly: **KubeEdge 1.15.0 supports cgroup v2 natively** (added in KubeEdge 1.12, released 2022). Ubuntu 22.04 uses cgroup v2 by default. No bootargs change is needed. Proceed directly to Phase 4.
-
-If `edgecore` does fail at Phase 5 with a cgroup-related error, the correct fix at that point is:
-```bash
-# Check what cgroup driver containerd is using:
-grep -i cgroup /etc/containerd/config.toml
-
-# edgecore cgroup driver config is in:
-grep -i cgroup /etc/kubeedge/config/edgecore.yaml
-```
-And adjust the driver setting to match (`cgroupfs` vs `systemd`) — not a bootargs change.
+> If `edgecore` fails at Phase 5 with a cgroup-related error, fix the driver mismatch instead of touching bootargs:
+> ```bash
+> grep -i cgroup /etc/containerd/config.toml
+> grep -i cgroup /etc/kubeedge/config/edgecore.yaml
+> ```
+> Adjust the driver setting (`cgroupfs` vs `systemd`) to match between the two.
 
 ---
 
@@ -685,7 +673,6 @@ These remain identical and are unaffected by the OS change:
 |---|---|---|---|
 | 1 | Hardware overlay + model compile (dev PC) | None — already done | ✅ Complete |
 | 2 | Flash stock Ubuntu 22.04 to board | ~10 min | ✅ Complete |
-| 3 | ~~cgroup v1 via GRUB edit~~ | — | ⏭️ Skipped — KubeEdge 1.15.0 supports cgroup v2; Kria Ubuntu uses U-Boot not GRUB |
 | 4 | containerd + CNI install | ~15 min | ✅ Done |
 | 5 | `keadm join` | ~10 min | ✅ Done |
 | 6A | Load overlay + mount custom model into smartcam container | ~30 min | ⚠️ Blocked — v4l2src buffer pool failure on /dev/video2; see Phase 6 Known Issues |

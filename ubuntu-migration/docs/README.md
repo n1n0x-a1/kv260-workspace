@@ -148,7 +148,6 @@ ffplay rtsp://192.168.123.118:554/test
 |---|---|---|---|
 | 1 | Flash Ubuntu 22.04 + Docker + firmware | ✅ Done | [`smartcam_deployment_guide.md`](smartcam_deployment_guide.md) |
 | 2 | Load `kv260-smartcam` overlay + run `xilinx/smartcam:2022.1` | ✅ Done | Same |
-| 3 | ~~Enable cgroup v1~~ | ⏭️ Skipped | KubeEdge 1.15.0 supports cgroup v2; Kria Ubuntu uses U-Boot not GRUB — see [`ubuntu_migration_plan.md`](ubuntu_migration_plan.md) Phase 3 |
 | 4 | Install containerd + CNI plugins | ✅ Done | [`ubuntu_migration_plan.md`](ubuntu_migration_plan.md) Phase 4 |
 | 5 | `keadm join` — connect KV260 to KubeEdge master | ✅ Done | [`ubuntu_migration_plan.md`](ubuntu_migration_plan.md) Phase 5 |
 | 6 | Deploy custom model (`face_mask_detection_pt`) via bind-mount | ⬜ Pending | [`ubuntu_migration_plan.md`](ubuntu_migration_plan.md) Phase 6 |
