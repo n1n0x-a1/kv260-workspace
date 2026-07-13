@@ -30,6 +30,5 @@ model {
     biases: 242
     biases: 238
     test_mAP: false
-    iou_type: 1
   }
 }

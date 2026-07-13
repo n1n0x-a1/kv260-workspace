@@ -78,7 +78,7 @@ KubeEdge Master (Proxmox VM)                           ← NO CHANGE
 | Phase 1 (Vivado/Vitis build) | Unchanged | Unchanged |
 | Phase 2 (OS image build) | `bitbake petalinux-image-minimal` — slow, brittle | **Gone** — flash stock AMD image |
 | Phase 3 (Flash + partition) | Flash `.wic.gz` + manual resize, copy `system.dtb` | Flash standard `.img.xz` — no resize, no dtb copy |
-| cgroup v1 for edgecore | Decompile/edit/recompile `system.dtb` bootargs | Edit `/etc/default/grub` + `update-grub` |
+| cgroup v1 for edgecore | Decompile/edit/recompile `system.dtb` bootargs | **Not needed** — KubeEdge 1.15.0 supports cgroup v2 natively (Ubuntu 22.04 default) |
 | containerd install | Baked into Yocto image via `meta-kubeedge` | `apt install containerd` |
 | Phase 4 (SCP artifacts to board) | Unchanged | Unchanged |
 | Phase 5 (keadm join) | Unchanged | Unchanged |
@@ -131,83 +131,127 @@ Verify the board boots, SSH works, and `xmutil listapps` shows `kv260-smartcam` 
 
 ---
 
-### Phase 3 — Enable cgroup v1 (Required for KubeEdge `edgecore`)
+### Phase 3 — ~~Enable cgroup v1~~ SKIPPED
 
-**Status: Not yet done on the Ubuntu board.**
+**Status: Skipped — not required for KubeEdge 1.15.0.**
 
-On the Yocto image, this required decompiling `system.dtb`, editing `bootargs`, recompiling, and copying the modified file to the boot partition — a fragile multi-step process. On Ubuntu, it is a single file edit:
+> [!NOTE]
+> This phase was originally planned because the Yocto path required patching `system.dtb` bootargs to force cgroup v1 for `edgecore`. On Ubuntu the plan was to use `update-grub` instead — but **Kria Ubuntu does not use GRUB**. It uses U-Boot with a compiled `boot.scr.uimg` script on the FAT boot partition. `update-grub` is not installed and `/etc/default/grub` has no effect.
+>
+> Attempting to modify `boot.scr.uimg` directly (extract → edit → recompile with `mkimage`) failed twice and bricked the boot script both times. The `boot.scr.uimg.bak` backup on the boot partition is the safe copy — **do not attempt to modify `boot.scr.uimg` again** without a reliable recovery path (SD card reader on a second PC).
+>
+> More importantly: **KubeEdge 1.15.0 supports cgroup v2 natively** (added in KubeEdge 1.12, released 2022). Ubuntu 22.04 uses cgroup v2 by default. No bootargs change is needed. Proceed directly to Phase 4.
 
+If `edgecore` does fail at Phase 5 with a cgroup-related error, the correct fix at that point is:
 ```bash
-# On the KV260 board:
-sudo nano /etc/default/grub
-```
+# Check what cgroup driver containerd is using:
+grep -i cgroup /etc/containerd/config.toml
 
-Change the `GRUB_CMDLINE_LINUX` line to:
+# edgecore cgroup driver config is in:
+grep -i cgroup /etc/kubeedge/config/edgecore.yaml
 ```
-GRUB_CMDLINE_LINUX="cgroup_enable=memory cgroup_memory=1 systemd.unified_cgroup_hierarchy=0"
-```
-
-Then apply and reboot:
-```bash
-sudo update-grub
-sudo reboot
-```
-
-After reboot, verify:
-```bash
-# Should show cgroup v1 hierarchy active:
-ls /sys/fs/cgroup/memory/
-# If this directory exists and has content, cgroup v1 is working
-```
+And adjust the driver setting to match (`cgroupfs` vs `systemd`) — not a bootargs change.
 
 ---
 
 ### Phase 4 — Install containerd + CNI Plugins
 
-**Status: Not yet done on the Ubuntu board.**
+**Status: ✅ Done.**
 
 ```bash
 # Install containerd
 sudo apt install -y containerd
 
-# Generate default config and configure cgroupfs driver (required for keadm)
+# Generate default config
 sudo mkdir -p /etc/containerd
 containerd config default | sudo tee /etc/containerd/config.toml
 
-# Edit config.toml to use cgroupfs (not systemd) driver:
-sudo sed -i 's/SystemdCgroup = true/SystemdCgroup = false/' /etc/containerd/config.toml
+# Keep SystemdCgroup = true (default) — correct for cgroup v2 on Ubuntu 22.04
+# DO NOT change to false; that's for cgroup v1 only
 
 sudo systemctl restart containerd
 sudo systemctl enable containerd
 
-# Install CNI plugins
+# Install CNI plugins (ARM64)
 sudo mkdir -p /opt/cni/bin
 wget https://github.com/containernetworking/plugins/releases/download/v1.3.0/cni-plugins-linux-arm64-v1.3.0.tgz
 sudo tar -xzf cni-plugins-linux-arm64-v1.3.0.tgz -C /opt/cni/bin/
+ls /opt/cni/bin/   # verify: should show bridge, flannel, host-local, loopback, etc.
+
+# Create CNI network config — required or keadm join fails with "cni plugin not initialized"
+# The binaries alone aren't enough; containerd also needs a config in /etc/cni/net.d/
+sudo mkdir -p /etc/cni/net.d
+sudo tee /etc/cni/net.d/10-containerd-net.conflist <<EOF
+{
+  "cniVersion": "1.0.0",
+  "name": "containerd-net",
+  "plugins": [
+    {
+      "type": "bridge",
+      "bridge": "cni0",
+      "isGateway": true,
+      "ipMasq": true,
+      "promiscMode": true,
+      "ipam": {
+        "type": "host-local",
+        "ranges": [[{"subnet": "10.88.0.0/16"}]],
+        "routes": [{"dst": "0.0.0.0/0"}]
+      }
+    },
+    {
+      "type": "portmap",
+      "capabilities": {"portMappings": true}
+    }
+  ]
+}
+EOF
+
+sudo systemctl restart containerd
 ```
+
+> **Note**: During `systemctl restart containerd` you will see `overlayfs: idmapped layers are currently not supported` in the kernel log. This is a harmless warning — the KV260 kernel doesn't support idmapped overlayfs mounts, so containerd falls back to standard overlayfs. The service starts and runs normally (`Active: active (running)`).
+>
+> **Both `/opt/cni/bin/` and `/etc/cni/net.d/` must exist before `keadm join`** — the binaries alone are not enough. Without a config file in `net.d/`, containerd can't initialize the CNI plugin and `keadm join` fails at the sandbox step.
 
 ---
 
 ### Phase 5 — KubeEdge `edgecore` Join
 
-**Status: Not yet done on the Ubuntu board. Commands are identical to what the README's Phase 5 already documents.**
+**Status: ✅ Done. Node joins as `Ready` (`kubectl get nodes` confirmed).**
+
+#### Install keadm
 
 ```bash
-# Download keadm for ARM64 (match version to your cloudcore version on the master)
-# Check your master: ssh <master-ip> "keadm version"
 wget https://github.com/kubeedge/kubeedge/releases/download/v1.15.0/keadm-v1.15.0-linux-arm64.tar.gz
 tar -xzf keadm-v1.15.0-linux-arm64.tar.gz
-sudo mv keadm-v1.15.0-linux-arm64/keadm /usr/local/bin/keadm
+# Binary is nested two levels deep: .../keadm/keadm — cp the file, not the directory
+sudo cp keadm-v1.15.0-linux-arm64/keadm/keadm /usr/local/bin/keadm
+sudo chmod +x /usr/local/bin/keadm
+keadm version  # verify
+```
 
-# Get token from master:
-# (run on the master VM)
-# keadm gettoken --kube-config=/root/.kube/config
+#### Get join token (run on master VM)
 
-# Join the cluster:
+```bash
+# Use $HOME/.kube/config — NOT /root/.kube/config (permission denied as non-root)
+keadm gettoken --kube-config=$HOME/.kube/config
+```
+
+#### Clean up any previous failed join attempt
+
+```bash
+# If /etc/kubeedge/ exists from a prior attempt, keadm join will refuse to run:
+# "the management directory /etc/kubeedge/ is not clean, please remove it first"
+sudo rm -rf /etc/kubeedge/
+```
+
+#### Join the cluster
+
+```bash
 sudo keadm join \
-  --cloudcore-ipport=<master-ip>:10000 \
+  --cloudcore-ipport=master.ninox.com:10000 \
   --token=<token-from-master> \
-  --cgroupdriver=cgroupfs \
+  --cgroupdriver=systemd \
   --edgenode-name=kv260-edge-1
 ```
 
@@ -233,9 +277,25 @@ sudo xmutil unloadapp
 sudo xmutil loadapp kv260-smartcam
 
 # On the dev PC: SCP your compiled model and JSON configs to the board
-scp -r /path/to/face_mask_detection_pt/  ubuntu@192.168.123.118:/home/ubuntu/models/
-scp -r /path/to/kernel_jsons/            ubuntu@192.168.123.118:/home/ubuntu/jsons/
-scp /path/to/dpu.xclbin                  ubuntu@192.168.123.118:/home/ubuntu/
+#
+# WARNING — scp -r nesting pitfall: if the destination directory already exists,
+# `scp -r src/ host:dest/` copies the src directory ITSELF into dest, creating
+# dest/src/files instead of dest/files. Avoid by copying contents explicitly.
+
+# 1. Create destination dirs on the board first:
+ssh ubuntu@192.168.123.118 "mkdir -p /home/ubuntu/models/face_mask_detection_pt /home/ubuntu/jsons"
+
+# 2. Copy model files into the pre-created dir (no -r, explicit destination):
+scp ubuntu-migration/models/face_mask_detection_pt/* ubuntu@192.168.123.118:/home/ubuntu/models/face_mask_detection_pt/
+
+# 3. Copy JSON configs as individual files (avoids directory nesting):
+scp ubuntu-migration/jsons/*.json ubuntu@192.168.123.118:/home/ubuntu/jsons/
+
+# 4. Copy xclbin:
+scp ubuntu-migration/dpu.xclbin ubuntu@192.168.123.118:/home/ubuntu/
+
+# 5. Verify files landed correctly (not nested inside a subdirectory):
+ssh ubuntu@192.168.123.118 "ls /home/ubuntu/jsons/ && ls /home/ubuntu/models/face_mask_detection_pt/"
 
 # Update /etc/vart.conf on the board to point to your xclbin:
 sudo bash -c 'cat > /etc/vart.conf << EOF
@@ -246,7 +306,20 @@ sudo bash -c 'cat > /etc/vart.conf << EOF
 EOF'
 ```
 
-Run the custom pipeline inside the existing smartcam container:
+**On the host (before starting the container)** — set up the CSI media pipeline:
+```bash
+# On Ubuntu, ap1302 is part of the Kria kernel and auto-loads when the overlay is applied.
+# NO manual insmod needed — verify it loaded:
+lsmod | grep ap1302
+
+# CSI camera is on /dev/media1 (not /dev/media0 — USB webcam takes that)
+# CSI capture node is /dev/video2 (USB webcam takes /dev/video0, /dev/video1)
+# Verify:
+media-ctl -d /dev/media1 -p | grep entity
+v4l2-ctl --list-devices
+```
+
+Then start the container with models and jsons bind-mounted:
 ```bash
 docker run --privileged --net=host \
   -v /dev:/dev -v /sys:/sys -v /tmp:/tmp -v /run:/run \
@@ -255,23 +328,45 @@ docker run --privileged --net=host \
   -v /home/ubuntu/models:/models \
   -v /home/ubuntu/jsons:/jsons \
   -it xilinx/smartcam:2022.1 bash
-
-# Inside the container — CSI camera bring-up (same as before):
-insmod /tmp/ap1302.ko   # if custom overlay requires it; skip if kv260-smartcam handles it
-media-ctl -V '"ap1302.4-003c":2 [fmt:VYYUYY8_1X24/1920x1080]'
-v4l2-ctl -d /dev/video0 --set-fmt-video=width=1920,height=1080,pixelformat=NV12
-
-# Run inference pipeline with face_mask_detection_pt:
-gst-launch-1.0 \
-  v4l2src device=/dev/video0 io-mode=mmap ! \
-  video/x-raw,format=NV12,width=1920,height=1080 ! \
-  vvas_xinfer \
-    preprocess-config=/jsons/kernel_preprocessor_face_mask.json \
-    infer-config=/jsons/kernel_dpu_face_mask.json ! \
-  vvas_xfilter kernels-config=/jsons/kernel_bbox_face_mask.json ! \
-  videoconvert ! jpegenc ! rtpjpegpay ! \
-  udpsink host=192.168.123.128 port=5000
 ```
+
+Inside the container — configure the media pipeline using `smartcam --mipi` (must pass explicit resolution; default is 4K):
+```bash
+# smartcam --mipi handles all media-ctl pad format setup internally.
+# Manual media-ctl -V commands fail with "Invalid argument" because ap1302 pad2
+# format (VYYUYY8_1X24) cannot be set directly on this kernel.
+# Run smartcam briefly to configure the pipeline, then kill it — kernel state persists.
+smartcam --mipi -t rtsp --width 1920 --height 1080 &
+sleep 5
+kill %1
+
+# Force the capture device to 1080p NV12 (smartcam leaves it at 3840x2160):
+v4l2-ctl -d /dev/video2 --set-fmt-video=width=1920,height=1080,pixelformat=NV12
+```
+
+> ⚠️ **BLOCKED — see Known Issues below.** The `gst-launch-1.0 v4l2src device=/dev/video2` pipeline fails with `Buffer pool activation failed` even after the above setup. Root cause not yet resolved.
+
+---
+
+#### Known Issues / Blockers for Phase 6A (CSI + custom VVAS pipeline)
+
+| # | Problem | What we tried | Status |
+|---|---|---|---|
+| 1 | `insmod /tmp/ap1302.ko` fails — file not found | ap1302 is a built-in kernel module on Ubuntu; auto-loads when overlay applied. No insmod needed. | ✅ Resolved |
+| 2 | `media-ctl` without `-d` goes to USB webcam (`/dev/media0`) | Must use `-d /dev/media1` for CSI pipeline | ✅ Resolved |
+| 3 | `media-ctl -d /dev/media1 -V '"ap1302.4-003c":2 [fmt:VYYUYY8_1X24/1920x1080]'` → `Invalid argument (22)` | Cannot set ap1302 pad2 format directly on Ubuntu kernel. `smartcam --mipi` handles it internally via GStreamer. | ⚠️ Workaround: use smartcam to configure |
+| 4 | CSI capture is `/dev/video2`, not `/dev/video0` | USB webcam takes `/dev/video0`+`/dev/video1`. CSI `isp_vcap_csi` is `/dev/video2`. | ✅ Resolved |
+| 5 | `smartcam --mipi` defaults to 3840×2160 (4K) | Must pass `--width 1920 --height 1080` explicitly | ✅ Resolved |
+| 6 | ap1302 pad2 stays at `UYVY8_1X16/4208x3120` after smartcam exits | csiss pads correctly set to `VYYUYY8_1X24/1920x1080` while smartcam runs; ap1302 pad2 does not change. State partially resets when smartcam exits. | ⚠️ Partially unresolved |
+| 7 | `gst-launch-1.0 v4l2src device=/dev/video2` → `Buffer pool activation failed` | `isp_vcap_csi` uses V4L2 Multiplanar API — standard `v4l2src` may not handle it correctly after smartcam exits. v4l2-ctl format set to 1920x1080 NV12 does not fix it. | ❌ **Root cause unknown — BLOCKED** |
+| 8 | JSON `xclbin-location` wrong path | Was `/home/ubuntu/ubuntu-migration/dpu.xclbin`; correct is `/home/ubuntu/dpu.xclbin` | ✅ Fixed via sed |
+| 9 | JSON `model-path` wrong path | Was `/usr/share/vitis_ai_library/models/`; correct is `/models/` (bind-mount) | ✅ Fixed via sed |
+
+**Next investigation options (not yet tried):**
+- Use `io-mode=dmabuf` instead of `mmap` in v4l2src
+- Try `gst-launch-1.0 v4l2src device=/dev/video2 ! video/x-raw,...` with explicit multiplanar caps
+- Check if `smartcam --mipi` can be kept running while a second pipeline reads from an intermediate tee or FIFO
+- Use the `smart_model_select` binary from `smartapp-modified/` which already has a working MIPI pipeline — modify its model path to point to `face_mask_detection_pt`
 
 On the dev PC:
 ```bash
@@ -280,36 +375,174 @@ ffplay stream.sdp    # reuse existing stream.sdp from prior session
 
 #### Approach B: Deploy your custom `kv260-vvas-sms` overlay
 
+**Status: ✅ Overlay loaded and models deployed. Docker pipeline run pending.**
+
 Best when you need the custom DPU bitstream you synthesized in Phase 1 (e.g. for a different DPU config, or to package it alongside future custom kernels).
 
+**Step 1 — Prepare firmware files (on dev PC, from workspace root):**
+
+`ubuntu-migration/overlay/` already contains `kv260-vvas-sms.bit.bin` — no need to run `bootgen` again. You only need to compile the `.dtsi` → `.dtbo` since no pre-built `.dtbo` is included:
+
 ```bash
-# Package the overlay as a firmware bundle on the dev PC:
-# Your Phase 1 output directory should have:
-#   kv260-vvas-sms.bit      → convert to .bit.bin
-#   kv260-vvas-sms.dtbo
-#   shell.json
+# Install device-tree compiler if not present:
+sudo apt install device-tree-compiler -y
 
-# Convert .bit → .bit.bin (if not already done):
-# (run in Vitis container or on host with Xilinx tools)
-bootgen -arch zynqmp -image kv260-vvas-sms.bif -o kv260-vvas-sms.bit.bin -w on
+cd ubuntu-migration/overlay
 
-# SCP the firmware bundle to the board:
-ssh ubuntu@192.168.123.118 "sudo mkdir -p /lib/firmware/xilinx/kv260-vvas-sms"
-scp kv260-vvas-sms.bit.bin  ubuntu@192.168.123.118:/tmp/
-scp kv260-vvas-sms.dtbo     ubuntu@192.168.123.118:/tmp/
-scp shell.json               ubuntu@192.168.123.118:/tmp/
+# Compile .dtsi → .dtbo:
+dtc -@ -I dts -O dtb -o kv260-vvas-sms.dtbo kv260-vvas-sms.dtsi
+```
+
+> **Note**: `dtc` will print many warnings about `reg_format`, `avoid_default_addr_size`, etc. These are **harmless** — Xilinx overlay DTS files use non-standard reg formats that the host `dtc` doesn't know about but the Kria kernel accepts fine. The `.dtbo` is generated correctly as long as there are no `[ERROR]` lines.
+
+> **If you ever need to regenerate `.bit.bin`** from the raw `.bit` file: first install `xilinx-bootgen` (`sudo apt install xilinx-bootgen`), create a `.bif` file alongside your `.bit`, then run `bootgen`:
+> ```bash
+> cat > kv260-vvas-sms.bif << 'EOF'
+> all:
+> {
+>     [destination_device = pl] kv260-vvas-sms.bit
+> }
+> EOF
+> bootgen -arch zynqmp -image kv260-vvas-sms.bif -o kv260-vvas-sms.bit.bin -w on
+> ```
+
+**Step 2 — SCP firmware bundle to the board (from workspace root):**
+
+```bash
+# Copy to /tmp first (no sudo needed for scp)
+scp ubuntu-migration/overlay/kv260-vvas-sms.bit.bin \
+    ubuntu-migration/overlay/kv260-vvas-sms.dtbo \
+    ubuntu-migration/overlay/shell.json \
+    ubuntu@192.168.123.118:/tmp/
+
+# Install into firmware directory with sudo
 ssh ubuntu@192.168.123.118 \
-  "sudo mv /tmp/kv260-vvas-sms.* /lib/firmware/xilinx/kv260-vvas-sms/ && \
-   sudo mv /tmp/shell.json /lib/firmware/xilinx/kv260-vvas-sms/"
+  "sudo mkdir -p /lib/firmware/xilinx/kv260-vvas-sms && \
+   sudo mv /tmp/kv260-vvas-sms.bit.bin \
+           /tmp/kv260-vvas-sms.dtbo \
+           /tmp/shell.json \
+           /lib/firmware/xilinx/kv260-vvas-sms/"
+```
 
-# Load your custom overlay:
+**Step 3 — Load the overlay (on the board):**
+
+```bash
 sudo xmutil unloadapp
 sudo xmutil loadapp kv260-vvas-sms
-
-# Deploy models to the expected path (same as Yocto — path is part of the VVAS config, not OS):
-sudo mkdir -p /opt/xilinx/kv260-vvas-sms/models.b3136/
-scp -r /path/to/models.b3136/ ubuntu@192.168.123.118:/opt/xilinx/kv260-vvas-sms/
+# Expected output: "kv260-vvas-sms: loaded to slot 0"
 ```
+
+**Step 4 — Deploy models (from workspace root on dev PC):**
+
+```bash
+# Create destination dirs on the board first (avoids scp -r nesting pitfall)
+ssh ubuntu@192.168.123.118 "mkdir -p /tmp/face_mask_detection_pt"
+scp ubuntu-migration/models/face_mask_detection_pt/* \
+    ubuntu@192.168.123.118:/tmp/face_mask_detection_pt/
+
+# Move to final location with sudo
+ssh ubuntu@192.168.123.118 \
+  "sudo mkdir -p /opt/xilinx/kv260-vvas-sms/models.b3136/face_mask_detection_pt && \
+   sudo cp /tmp/face_mask_detection_pt/* \
+           /opt/xilinx/kv260-vvas-sms/models.b3136/face_mask_detection_pt/"
+```
+
+**Step 5 — Fix JSON configs and SCP to board (from workspace root on dev PC):**
+
+```bash
+cd ubuntu-migration/jsons
+
+# Fix xclbin path (was wrong: /home/ubuntu/ubuntu-migration/dpu.xclbin)
+sed -i 's|/home/ubuntu/ubuntu-migration/dpu.xclbin|/home/ubuntu/dpu.xclbin|g' *.json
+
+# Fix model path (was wrong: /usr/share/vitis_ai_library/models/)
+# /models/ is the bind-mount path inside the Docker container
+sed -i 's|/usr/share/vitis_ai_library/models/|/models/|g' *.json
+
+# Verify
+grep -E "xclbin-location|model-path" *.json
+
+cd ../..
+
+# SCP to board
+ssh ubuntu@192.168.123.118 "mkdir -p /home/ubuntu/jsons"
+scp ubuntu-migration/jsons/*.json ubuntu@192.168.123.118:/home/ubuntu/jsons/
+```
+
+**Step 6 — Run the Docker container with Approach B bind-mounts:**
+
+```bash
+docker run --privileged --net=host \
+  -v /dev:/dev -v /sys:/sys -v /tmp:/tmp -v /run:/run \
+  -v /etc/vart.conf:/etc/vart.conf \
+  -v /lib/firmware/xilinx:/lib/firmware/xilinx \
+  -v /opt/xilinx/kv260-vvas-sms/models.b3136:/models \
+  -v /home/ubuntu/jsons:/jsons \
+  -it xilinx/smartcam:2022.1 bash
+```
+
+> `model-path` in the JSON is `/models/` — this bind-mount maps the host's `models.b3136/` directory to `/models/` inside the container. The container sees `face_mask_detection_pt` directly under `/models/`.
+
+**Step 7 — One-time fixes inside the container (first run only):**
+
+These are needed because the `xilinx/smartcam:2022.1` container has VVAS libraries installed under the arch-specific path but plugins look in `/usr/lib/` directly, and the VART xclbin resolution falls back to `/usr/lib/dpu.xclbin`:
+
+```bash
+# 1. VVAS kernel libraries are at /usr/lib/aarch64-linux-gnu/ but plugins look in /usr/lib/
+ln -s /usr/lib/aarch64-linux-gnu/libvvas_xboundingbox.so  /usr/lib/libvvas_xboundingbox.so
+ln -s /usr/lib/aarch64-linux-gnu/libvvas_xpreprocessor.so /usr/lib/libvvas_xpreprocessor.so
+ln -s /usr/lib/aarch64-linux-gnu/libvvas_xdpuinfer.so     /usr/lib/libvvas_xdpuinfer.so
+
+# 2. VART ignores /etc/vart.conf xclbin path (prints "unknown config: { }") and
+#    falls back to /usr/lib/dpu.xclbin — symlink /tmp/dpu.xclbin there:
+#    (dpu.xclbin is in /tmp because /tmp is bind-mounted from the host)
+ln -s /tmp/dpu.xclbin /usr/lib/dpu.xclbin
+
+# 3. Remove iou_type field from prototxt — added in newer Vitis AI, not known to
+#    the older VART in this container:
+sed -i '/iou_type/d' /models/face_mask_detection_pt/face_mask_detection_pt.prototxt
+```
+
+> Note: these symlinks are lost when the container exits. If you restart the container, re-run this block. For persistence, commit the container to a new image: `docker commit <container-id> kv260-smartcam-patched`.
+
+**Step 8 — Run the inference pipeline (inside the container):**
+
+`v4l2src` cannot capture from `isp_vcap_csi` (V4L2 Multiplanar device) — use `mediasrcbin` instead, pointing at the **media device** (`/dev/media1`), not the video node:
+
+```bash
+# Run smartcam briefly to configure the CSI media pipeline pad formats,
+# then kill it — kernel state persists:
+smartcam --mipi -t rtsp --width 1920 --height 1080 &
+sleep 5
+kill %1
+
+# Full inference pipeline:
+gst-launch-1.0 mediasrcbin media-device=/dev/media1 ! \
+  video/x-raw,format=NV12,width=1920,height=1080,framerate=30/1 ! \
+  vvas_xinfer \
+    preprocess-config=/jsons/kernel_preprocessor_face_mask.json \
+    infer-config=/jsons/kernel_dpu_face_mask.json ! \
+  vvas_xfilter kernels-config=/jsons/kernel_bbox_face_mask.json ! \
+  videoconvert ! jpegenc quality=60 ! rtpjpegpay ! \
+  udpsink host=192.168.123.128 port=5000
+```
+
+**Step 9 — View on dev PC:**
+
+```bash
+# Capture frames to disk (verifies pipeline works):
+gst-launch-1.0 udpsrc port=5000 \
+  caps="application/x-rtp,media=video,clock-rate=90000,encoding-name=JPEG,payload=26" ! \
+  rtpjpegdepay ! multifilesink location="/tmp/frame%05d.jpg" max-files=5
+# Ctrl+C after 2-3 seconds, then open /tmp/frame00000.jpg
+
+# Live display (GTK window — works on both X11 and Wayland):
+gst-launch-1.0 udpsrc port=5000 \
+  caps="application/x-rtp,media=video,clock-rate=90000,encoding-name=JPEG,payload=26" ! \
+  rtpjpegdepay ! jpegdec ! videoconvert ! gtksink sync=false
+```
+
+> The GTK window shows a live feed. If the room/scene is dark or empty, the image will appear black — this is correct behaviour. Bounding boxes appear when faces are in frame.
 
 ---
 
@@ -410,7 +643,7 @@ On Ubuntu 22.04, achieving full boot-persistence is easier than on the Yocto min
 | Component | How to persist |
 |---|---|
 | `xmutil loadapp kv260-smartcam` | Add to `/etc/rc.local` or create a systemd `oneshot` unit |
-| `insmod ap1302.ko` | Place `.ko` in `/lib/modules/$(uname -r)/extra/` + `depmod -a` + `modprobe ap1302` in a udev rule |
+| `ap1302` driver | Auto-loads on Ubuntu when overlay is applied — no manual insmod needed |
 | `media-ctl` pad format fixup | Udev rule triggered on `/dev/video0` appearance |
 | Socket servers | systemd services (Phase 7 above) |
 | `edgecore` | `keadm join` already registers it as a systemd service automatically |
@@ -452,11 +685,11 @@ These remain identical and are unaffected by the OS change:
 |---|---|---|---|
 | 1 | Hardware overlay + model compile (dev PC) | None — already done | ✅ Complete |
 | 2 | Flash stock Ubuntu 22.04 to board | ~10 min | ✅ Complete |
-| 3 | cgroup v1 via GRUB edit | ~5 min | ⬜ TODO |
-| 4 | containerd + CNI install | ~15 min | ⬜ TODO |
-| 5 | `keadm join` | ~10 min | ⬜ TODO |
-| 6A | Load overlay + mount custom model into smartcam container | ~30 min | ⬜ TODO |
-| 6B | Package + deploy custom `kv260-vvas-sms` overlay (optional) | ~1–2 hrs | ⬜ Optional |
+| 3 | ~~cgroup v1 via GRUB edit~~ | — | ⏭️ Skipped — KubeEdge 1.15.0 supports cgroup v2; Kria Ubuntu uses U-Boot not GRUB |
+| 4 | containerd + CNI install | ~15 min | ✅ Done |
+| 5 | `keadm join` | ~10 min | ✅ Done |
+| 6A | Load overlay + mount custom model into smartcam container | ~30 min | ⚠️ Blocked — v4l2src buffer pool failure on /dev/video2; see Phase 6 Known Issues |
+| 6B | Package + deploy custom `kv260-vvas-sms` overlay (optional) | ~1–2 hrs | ✅ Done — pipeline confirmed working; live frames captured on dev PC |
 | 7 | Socket servers as systemd services | ~20 min | ⬜ TODO |
 | 8 | `ninoctl` cross-compile + test | ~10 min | ⬜ TODO |
 | 9 | Update KubeEdge pod manifests for Ubuntu paths | ~15 min | ⬜ TODO |

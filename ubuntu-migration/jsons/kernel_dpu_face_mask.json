@@ -1,5 +1,5 @@
 {
-  "xclbin-location":"/home/ubuntu/ubuntu-migration/dpu.xclbin",
+  "xclbin-location":"/home/ubuntu/dpu.xclbin",
   "vvas-library-repo": "/usr/lib/",
   "element-mode":"inplace",
   "kernel" : {
@@ -8,7 +8,7 @@
       "model-name" : "face_mask_detection_pt",
       "model-class" : "YOLOV3",
       "model-format" : "BGR",
-      "model-path" : "/usr/share/vitis_ai_library/models/",
+      "model-path" : "/models/",
       "run_time_model" : false,
       "need_preprocess" : false,
       "performance_test" : false,

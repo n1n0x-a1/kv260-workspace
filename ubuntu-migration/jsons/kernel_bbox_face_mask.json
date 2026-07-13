@@ -1,5 +1,5 @@
 {
-  "xclbin-location":"/home/ubuntu/ubuntu-migration/dpu.xclbin",
+  "xclbin-location":"/home/ubuntu/dpu.xclbin",
   "vvas-library-repo": "/usr/lib/",
   "element-mode":"inplace",
   "kernels" :[
