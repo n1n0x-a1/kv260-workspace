@@ -669,17 +669,20 @@ These remain identical and are unaffected by the OS change:
 
 ## Phase Summary
 
+> [!NOTE]
+> Estimates below are revised from the original plan — Phase 5A's 9-item known-issues list showed the initial figures were too optimistic and assumed a clean apt/config path with no platform quirks.
+
 | Phase | Action | Effort | Status |
 |---|---|---|---|
 | 1 | Hardware overlay + model compile (dev PC) | None — already done | ✅ Complete |
-| 2 | Flash stock Ubuntu 22.04 to board | ~10 min | ✅ Complete |
-| 3 | containerd + CNI install | ~15 min | ✅ Done |
-| 4 | `keadm join` | ~10 min | ✅ Done |
-| 5A | Load overlay + mount custom model into smartcam container | ~30 min | ⚠️ Blocked — v4l2src buffer pool failure on /dev/video2; see Phase 5 Known Issues |
-| 5B | Package + deploy custom `kv260-vvas-sms` overlay (optional) | ~1–2 hrs | ✅ Done — pipeline confirmed working; live frames captured on dev PC |
-| 6 | Socket servers as systemd services | ~20 min | ⬜ TODO |
-| 7 | `ninoctl` cross-compile + test | ~10 min | ⬜ TODO |
-| 8 | Update KubeEdge pod manifests for Ubuntu paths | ~15 min | ⬜ TODO |
+| 2 | Flash stock Ubuntu 22.04 to board | ~30 min | ✅ Complete |
+| 3 | containerd + CNI install | ~45 min | ✅ Done |
+| 4 | `keadm join` | ~45 min | ✅ Done |
+| 5A | Load overlay + mount custom model into smartcam container | 4+ hrs, still blocked | ⚠️ Blocked — v4l2src buffer pool failure on /dev/video2; see Phase 5 Known Issues |
+| 5B | Package + deploy custom `kv260-vvas-sms` overlay (optional) | ~3–4 hrs | ✅ Done — pipeline confirmed working; live frames captured on dev PC |
+| 6 | Socket servers as systemd services | ~45 min | ⬜ TODO |
+| 7 | `ninoctl` cross-compile + test | ~30 min | ⬜ TODO |
+| 8 | Update KubeEdge pod manifests for Ubuntu paths | ~45 min | ⬜ TODO |
 | — | Per-boot persistence (systemd units, udev rules) | ~30 min | ⬜ TODO |
 
-**Total estimated effort from current state (Ubuntu board already working): ~2–3 hours.**
+**Total estimated effort from current state (Ubuntu board already working): ~7–9 hours** — 4+ hrs already sunk into the still-blocked Phase 5A CSI/v4l2src issue, plus ~2.5 hrs for Phases 6–8 and persistence once 5A is unblocked.
