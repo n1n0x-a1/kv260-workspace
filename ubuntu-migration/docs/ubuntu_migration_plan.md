@@ -652,6 +652,243 @@ The XRT/zocl version-pin problem you hit in Yocto (`RDEPENDS` mismatch causing `
 
 ---
 
+### Phase 9 — Publish Detection Results via ROS2 (No Video Stream Required)
+
+**Status: ⬜ TODO**
+
+Instead of streaming JPEG video over UDP, extract just the bounding-box metadata from the VVAS inference pipeline and publish a lightweight detection signal to a ROS2 topic. The dev PC (or any node on the same subnet) subscribes and receives `true`/`false` per frame — no video decoding needed.
+
+#### Architecture
+
+```
+mediasrcbin → vvas_xinfer → appsink (Python)
+                                ↓
+                    parse GstVideoRegionOfInterestMeta
+                                ↓
+                    ros2 topic publish /face_detection (std_msgs/Bool)
+                                ↓  (DDS multicast, 192.168.123.0/24)
+              dev PC: ros2 topic echo /face_detection
+```
+
+DDS (ROS2's transport layer) auto-discovers peers on the same `/24` subnet — no K8s routing required. The KV260 publishes; the dev PC subscribes directly over Ethernet.
+
+#### Step 1 — Install ROS2 Humble on the board (Ubuntu 22.04 native)
+
+Run on the **KV260 host** (not inside the Docker container):
+
+```bash
+sudo apt install -y software-properties-common curl
+sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
+  -o /usr/share/keyrings/ros-archive-keyring.gpg
+echo "deb [arch=arm64 signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
+  http://packages.ros.org/ros2/ubuntu jammy main" \
+  | sudo tee /etc/apt/sources.list.d/ros2.list
+sudo apt update
+sudo apt install -y ros-humble-ros-base python3-colcon-common-extensions
+echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
+source /opt/ros/humble/setup.bash
+```
+
+#### Step 2 — Verify GstVideoRegionOfInterestMeta is attached by vvas_xinfer
+
+Run this probe **inside the `xilinx/smartcam:2022.1` container** to confirm VVAS attaches standard GStreamer ROI meta (not only its own opaque GstInferenceMeta):
+
+```bash
+python3 - <<'EOF'
+import gi
+gi.require_version('Gst', '1.0')
+from gi.repository import Gst
+Gst.init(None)
+
+PIPE = """
+mediasrcbin media-device=/dev/media1 !
+video/x-raw,format=NV12,width=1920,height=1080,framerate=30/1 !
+vvas_xinfer
+  preprocess-config=/jsons/kernel_preprocessor_face_mask.json
+  infer-config=/jsons/kernel_dpu_face_mask.json !
+appsink name=sink emit-signals=true max-buffers=1 drop=true
+"""
+
+pipeline = Gst.parse_launch(PIPE)
+sink = pipeline.get_by_name("sink")
+
+def on_sample(s):
+    sample = s.emit("pull-sample")
+    buf = sample.get_buffer()
+    it = buf.iterate_meta()
+    while True:
+        m = it.next()
+        if m is None:
+            break
+        print("meta type:", m.info.api)
+    return Gst.FlowReturn.OK
+
+sink.connect("new-sample", on_sample)
+pipeline.set_state(Gst.State.PLAYING)
+import time; time.sleep(5)
+pipeline.set_state(Gst.State.NULL)
+EOF
+```
+
+Expected output includes `GstVideoRegionOfInterestMetaAPI`. If only `GstInferenceMeta` appears, the ROI extraction in Step 3 will need a ctypes-based fallback (not yet written).
+
+#### Step 3 — Detection publisher script
+
+Save as `/home/ubuntu/detect_publisher.py` on the **KV260 host**:
+
+```python
+#!/usr/bin/env python3
+"""
+Reads VVAS inference ROI metadata from the CSI camera pipeline and publishes
+a Bool to /face_detection via ROS2.
+
+Run on the KV260 host (not inside the Docker container) after:
+  - xmutil loadapp kv260-vvas-sms
+  - smartcam --mipi pad-format init (see Step 8 of Phase 5B)
+  - source /opt/ros/humble/setup.bash
+"""
+import gi
+gi.require_version('Gst', '1.0')
+gi.require_version('GstVideo', '1.0')
+from gi.repository import Gst, GstVideo, GLib
+
+import rclpy
+from rclpy.node import Node
+from std_msgs.msg import Bool
+
+GST_PIPE = """
+mediasrcbin media-device=/dev/media1 !
+video/x-raw,format=NV12,width=1920,height=1080,framerate=30/1 !
+vvas_xinfer
+  preprocess-config=/home/ubuntu/jsons/kernel_preprocessor_face_mask.json
+  infer-config=/home/ubuntu/jsons/kernel_dpu_face_mask.json !
+appsink name=sink emit-signals=true max-buffers=1 drop=true
+"""
+
+def main():
+    Gst.init(None)
+    rclpy.init()
+    node = rclpy.create_node('face_detector')
+    pub = node.create_publisher(Bool, '/face_detection', 10)
+
+    pipeline = Gst.parse_launch(GST_PIPE)
+    sink = pipeline.get_by_name("sink")
+
+    def on_sample(appsink):
+        sample = appsink.emit("pull-sample")
+        buf = sample.get_buffer()
+
+        face_count = 0
+        it = buf.iterate_meta()
+        while True:
+            m = it.next()
+            if m is None:
+                break
+            if "VideoRegionOfInterest" in m.info.api:
+                face_count += 1
+
+        msg = Bool()
+        msg.data = face_count > 0
+        pub.publish(msg)
+        node.get_logger().info(f"faces={face_count} → {msg.data}")
+        rclpy.spin_once(node, timeout_sec=0)
+        return Gst.FlowReturn.OK
+
+    sink.connect("new-sample", on_sample)
+    pipeline.set_state(Gst.State.PLAYING)
+
+    loop = GLib.MainLoop()
+    import signal, sys
+    signal.signal(signal.SIGINT, lambda *_: (
+        pipeline.set_state(Gst.State.NULL),
+        loop.quit(),
+        sys.exit(0)
+    ))
+    loop.run()
+
+if __name__ == "__main__":
+    main()
+```
+
+Run it:
+```bash
+source /opt/ros/humble/setup.bash
+python3 /home/ubuntu/detect_publisher.py
+```
+
+#### Step 4 — Subscribe on the dev PC
+
+```bash
+# Install ROS2 Humble on the dev PC if not already present (Ubuntu 24.04 — use "noble" repo)
+source /opt/ros/humble/setup.bash    # or your installed distro
+
+# Subscribe to the detection topic:
+ros2 topic echo /face_detection
+
+# Expected output when faces are in frame:
+# data: true
+# ---
+# data: false
+# ---
+```
+
+If DDS discovery fails (no messages received), both nodes need the same domain ID and a multicast-capable transport:
+
+```bash
+# Set on BOTH the KV260 and the dev PC:
+export ROS_DOMAIN_ID=42
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp   # handles subnets better than FastDDS default
+sudo apt install -y ros-humble-rmw-cyclonedds-cpp  # if not installed
+```
+
+#### Step 5 — (Optional) Run inside the Docker container instead
+
+If running on the host is blocked (e.g. VVAS GStreamer plugins not installed on the host), run everything inside `xilinx/smartcam:2022.1` — it's Ubuntu 22.04 under the hood and `apt` works:
+
+```bash
+# Inside the container (apt installs are lost on container restart — commit after):
+apt install -y ros-humble-ros-base
+source /opt/ros/humble/setup.bash
+python3 /home/ubuntu/detect_publisher.py
+```
+
+The `--net=host` in the existing `docker run` command means DDS multicast reaches the dev PC directly.
+
+After verifying it works, commit the container to preserve the install:
+```bash
+docker commit <container-id> kv260-smartcam-ros2
+```
+
+#### Per-boot persistence
+
+```bash
+# /etc/systemd/system/face-detector.service
+sudo tee /etc/systemd/system/face-detector.service << 'EOF'
+[Unit]
+Description=Face detection ROS2 publisher
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+Environment="PATH=/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="LD_LIBRARY_PATH=/opt/ros/humble/lib"
+Environment="PYTHONPATH=/opt/ros/humble/lib/python3.10/site-packages"
+Environment="ROS_DOMAIN_ID=42"
+ExecStart=/usr/bin/python3 /home/ubuntu/detect_publisher.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now face-detector
+```
+
+---
+
 ## What This Migration Does NOT Change
 
 These remain identical and are unaffected by the OS change:
@@ -683,6 +920,7 @@ These remain identical and are unaffected by the OS change:
 | 6 | Socket servers as systemd services | ~45 min | ⬜ TODO |
 | 7 | `ninoctl` cross-compile + test | ~30 min | ⬜ TODO |
 | 8 | Update KubeEdge pod manifests for Ubuntu paths | ~45 min | ⬜ TODO |
+| 9 | Publish detection results via ROS2 (no video stream) | ~1–2 hrs | ⬜ TODO |
 | — | Per-boot persistence (systemd units, udev rules) | ~30 min | ⬜ TODO |
 
-**Total estimated effort from current state (Ubuntu board already working): ~7–9 hours** — 4+ hrs already sunk into the still-blocked Phase 5A CSI/v4l2src issue, plus ~2.5 hrs for Phases 6–8 and persistence once 5A is unblocked.
+**Total estimated effort from current state (Ubuntu board already working): ~8–11 hours** — 4+ hrs already sunk into the still-blocked Phase 5A CSI/v4l2src issue, plus ~3.5 hrs for Phases 6–9 and persistence once 5A is unblocked.

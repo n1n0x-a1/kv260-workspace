@@ -150,7 +150,7 @@ ffplay rtsp://192.168.123.118:554/test
 | 2 | Load `kv260-smartcam` overlay + run `xilinx/smartcam:2022.1` | ✅ Done | Same |
 | 3 | Install containerd + CNI plugins | ✅ Done | [`ubuntu_migration_plan.md`](ubuntu_migration_plan.md) Phase 3 |
 | 4 | `keadm join` — connect KV260 to KubeEdge master | ✅ Done | [`ubuntu_migration_plan.md`](ubuntu_migration_plan.md) Phase 4 |
-| 5 | Deploy custom model (`face_mask_detection_pt`) via bind-mount | ⬜ Pending | [`ubuntu_migration_plan.md`](ubuntu_migration_plan.md) Phase 5 |
+| 5 | Deploy custom model (`face_mask_detection_pt`) via bind-mount | ✅ Done | [`ubuntu_migration_plan.md`](ubuntu_migration_plan.md) Phase 5 |
 | 6 | Deploy socket servers as systemd services | ⬜ Pending | [`ubuntu_migration_plan.md`](ubuntu_migration_plan.md) Phase 6 |
 | 7 | Cross-compile + deploy `ninoctl` (ARM64) | ⬜ Pending | [`ubuntu_migration_plan.md`](ubuntu_migration_plan.md) Phase 7 |
 | 8 | Update KubeEdge pod manifests for Ubuntu paths | ⬜ Pending | [`ubuntu_migration_plan.md`](ubuntu_migration_plan.md) Phase 8 |
